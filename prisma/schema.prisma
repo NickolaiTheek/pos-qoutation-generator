@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  mobile       String
+  email        String?
+  address      String?
+  businessName String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quotations Quotation[]
+  invoices   Invoice[]
+
+  @@map("customers")
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  category     String   @default("Hardware")
+  defaultPrice Float    @default(0)
+  warranty     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quotationItems QuotationItem[]
+  invoiceItems   InvoiceItem[]
+
+  @@map("products")
+}
+
+model Quotation {
+  id              String   @id @default(cuid())
+  quotationNumber String   @unique
+  customerId      String
+  date            DateTime @default(now())
+  subtotal        Float    @default(0)
+  discountTotal   Float    @default(0)
+  grandTotal      Float    @default(0)
+  note            String?
+  status          String   @default("Draft")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  customer Customer        @relation(fields: [customerId], references: [id])
+  items    QuotationItem[]
+  invoices Invoice[]
+
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id          String  @id @default(cuid())
+  quotationId String
+  productId   String?
+  name        String
+  description String?
+  quantity    Float   @default(1)
+  unitPrice   Float   @default(0)
+  discount    Float   @default(0)
+  total       Float   @default(0)
+  warranty    String?
+
+  quotation Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  product   Product?  @relation(fields: [productId], references: [id])
+
+  @@map("quotation_items")
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  invoiceNumber String   @unique
+  quotationId   String?
+  customerId    String
+  date          DateTime @default(now())
+  subtotal      Float    @default(0)
+  discountTotal Float    @default(0)
+  grandTotal    Float    @default(0)
+  note          String?
+  status        String   @default("Unpaid")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer  Customer      @relation(fields: [customerId], references: [id])
+  quotation Quotation?    @relation(fields: [quotationId], references: [id])
+  items     InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  productId   String?
+  name        String
+  description String?
+  quantity    Float   @default(1)
+  unitPrice   Float   @default(0)
+  discount    Float   @default(0)
+  total       Float   @default(0)
+  warranty    String?
+
+  invoice  Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product  Product? @relation(fields: [productId], references: [id])
+
+  @@map("invoice_items")
+}
+
+model Settings {
+  id                   String  @id @default(cuid())
+  businessName         String  @default("Zero Pos")
+  logoUrl              String?
+  themeColor           String  @default("#3b82f6")
+  address              String?
+  phone                String?
+  email                String?
+  defaultQuotationNote String?
+  defaultInvoiceNote   String?
+
+  @@map("settings")
+}

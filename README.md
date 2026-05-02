@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Zero Pos — POS Invoice Generator
 
-## Getting Started
+A professional web application for generating Price Quotations and Invoices for POS system sales businesses.
 
-First, run the development server:
+## Features
+
+- Price Quotations (QTN-00001) and Invoices (INV-00001) with auto-numbering
+- PDF download and print support
+- Customer Management, Product Management, Dashboard, Settings
+- Convert Quotation → Invoice in one click
+- LKR currency formatting
+- 7 default products preloaded
+
+## Tech Stack
+
+- Next.js 16 (App Router, TypeScript)
+- Prisma 7 + SQLite via @prisma/adapter-libsql
+- Tailwind CSS v4
+- react-hook-form + Zod validation
+- jsPDF + html2canvas for PDF generation
+
+## Installation
 
 ```bash
+npm install
+npx prisma migrate dev --name init
+npx ts-node --esm prisma/seed.ts
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Default Products (Seeded)
 
-To learn more about Next.js, take a look at the following resources:
+1. Full Functional Desktop Machine — Hardware
+2. POS System Software — Software
+3. 1D/2D Barcode Scanner — Hardware (One Year Warranty)
+4. Label/Receipt Printer 2-in-1 XP-365B — Hardware (One Year Warranty)
+5. Cash Drawer — Hardware (4 Bill 8 Coin)
+6. Installation and Setup Service — Service
+7. Remote Support via AnyDesk — Support
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## PDF Generation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open any Quotation or Invoice detail page and click "Download PDF".
+Files are saved as: Zero-Pos-Quotation-QTN-00001.pdf / Zero-Pos-Invoice-INV-00001.pdf
 
-## Deploy on Vercel
+## Print
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Click "Print" on any detail page. Sidebar and action buttons are hidden automatically.
