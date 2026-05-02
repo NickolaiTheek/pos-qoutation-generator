@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { DollarSign, FileText, Receipt, TrendingUp } from "lucide-react";
+import { FileText, Receipt, TrendingUp, Wallet } from "lucide-react";
 
 interface SummaryCardsProps {
   totalQuotations: number;
@@ -40,7 +40,7 @@ export default function SummaryCards({
     {
       title: "Invoice Value",
       value: formatCurrency(totalInvoiceValue),
-      icon: DollarSign,
+      icon: Wallet,
       color: "text-amber-600",
       bg: "bg-amber-50",
     },
