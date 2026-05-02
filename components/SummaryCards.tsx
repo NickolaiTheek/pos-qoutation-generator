@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { FileText, Receipt, TrendingUp, Wallet } from "lucide-react";
+import { ClipboardList, FileText, TrendingUp, Wallet } from "lucide-react";
 
 interface SummaryCardsProps {
   totalQuotations: number;
@@ -26,7 +26,7 @@ export default function SummaryCards({
     {
       title: "Total Invoices",
       value: totalInvoices.toString(),
-      icon: Receipt,
+      icon: ClipboardList,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
     },
