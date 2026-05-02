@@ -1,13 +1,13 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, Phone, Mail, Building } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import SearchBar from "@/components/SearchBar";
 import CustomerForm from "@/components/CustomerForm";
+import SearchBar from "@/components/SearchBar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDate } from "@/lib/utils";
 import type { Customer } from "@/types";
+import { Building, Mail, Pencil, Phone, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);

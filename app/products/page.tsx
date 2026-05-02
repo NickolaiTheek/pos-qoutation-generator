@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Plus, Pencil, Trash2, Tag } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import SearchBar from "@/components/SearchBar";
 import ProductForm from "@/components/ProductForm";
+import SearchBar from "@/components/SearchBar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/types";
+import { Pencil, Plus, Tag, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 const CATEGORY_COLORS: Record<string, "default" | "success" | "warning" | "info" | "secondary"> = {
   Hardware: "default",

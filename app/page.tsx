@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { PlusCircle, FileText, Receipt, Users, Package, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import SummaryCards from "@/components/SummaryCards";
 import StatusBadge from "@/components/StatusBadge";
+import SummaryCards from "@/components/SummaryCards";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { DashboardStats } from "@/types";
+import { ArrowRight, FileText, Package, PlusCircle, Receipt, Users } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
