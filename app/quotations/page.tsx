@@ -70,7 +70,7 @@ export default function QuotationsPage() {
   const STATUSES = ["", "Draft", "Sent", "Accepted", "Rejected"];
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Quotations</h2>

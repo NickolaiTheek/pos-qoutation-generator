@@ -51,7 +51,7 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5 w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Products & Services</h2>

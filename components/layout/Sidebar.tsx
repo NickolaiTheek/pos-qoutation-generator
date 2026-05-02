@@ -8,7 +8,8 @@ import {
     PlusCircle,
     Receipt,
     Settings,
-    Users
+    Users,
+    X
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -24,20 +25,36 @@ const navItems = [
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-100 flex flex-col shadow-sm print:hidden">
+    <aside
+      className={cn(
+        "w-64 min-h-screen bg-white border-r border-gray-100 flex flex-col shadow-sm print:hidden z-50",
+        "fixed top-0 left-0 h-full transition-transform duration-300 md:relative md:translate-x-0 md:flex",
+        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+      )}
+    >
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100">
-        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-bold text-sm">ZP</span>
+      <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+            <span className="text-white font-bold text-sm">ZP</span>
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 text-sm leading-tight">Zero Pos</p>
+            <p className="text-xs text-gray-400 leading-tight">POS System</p>
+          </div>
         </div>
-        <div>
-          <p className="font-bold text-gray-900 text-sm leading-tight">Zero Pos</p>
-          <p className="text-xs text-gray-400 leading-tight">POS System</p>
-        </div>
+        {/* Close button - mobile only */}
+        <button
+          className="md:hidden p-1 rounded text-gray-400 hover:text-gray-600"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -53,6 +70,7 @@ export default function Sidebar() {
             <Link
               key={item.href + item.label}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive

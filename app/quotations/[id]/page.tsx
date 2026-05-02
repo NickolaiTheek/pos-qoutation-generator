@@ -59,7 +59,7 @@ export default function QuotationDetailPage() {
   if (!quotation) return <div className="p-8 text-gray-400">Quotation not found.</div>;
 
   return (
-    <div className="space-y-4 max-w-5xl">
+    <div className="space-y-4 w-full">
       <div className="flex items-center justify-between print:hidden">
         <div className="flex items-center gap-3">
           <Link href="/quotations"><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>

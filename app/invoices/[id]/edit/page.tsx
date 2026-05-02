@@ -80,7 +80,7 @@ export default function EditInvoicePage() {
   };
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5 w-full">
       <div className="flex items-center gap-3">
         <Link href={"/invoices/" + id}><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
         <h2 className="text-lg font-semibold text-gray-900">Edit Invoice</h2>

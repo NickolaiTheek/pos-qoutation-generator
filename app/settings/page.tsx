@@ -41,7 +41,7 @@ export default function SettingsPage() {
   if (loading) return <div className="p-8 text-gray-400">Loading...</div>;
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-2xl mx-auto w-full">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
         <p className="text-sm text-gray-500">Configure your business information and defaults.</p>

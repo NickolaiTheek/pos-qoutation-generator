@@ -1,5 +1,4 @@
-import Sidebar from "@/components/layout/Sidebar";
-import TopBar from "@/components/layout/TopBar";
+import AppShell from "@/components/layout/AppShell";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -19,13 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className={`${inter.className} min-h-full bg-gray-50`}>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <div className="flex-1 flex flex-col min-w-0">
-            <TopBar />
-            <main className="flex-1 p-6 overflow-auto">{children}</main>
-          </div>
-        </div>
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

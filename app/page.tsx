@@ -32,7 +32,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl">
+    <div className="space-y-6 w-full">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {quickLinks.map((item) => {
           const Icon = item.icon;

@@ -1,5 +1,6 @@
 "use client";
 
+import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const pageTitles: Record<string, string> = {
@@ -13,7 +14,7 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
 };
 
-export default function TopBar() {
+export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname();
 
   const getTitle = () => {
@@ -26,8 +27,18 @@ export default function TopBar() {
   };
 
   return (
-    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-6 print:hidden">
-      <h1 className="text-base font-semibold text-gray-800">{getTitle()}</h1>
+    <header className="h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4 md:px-6 print:hidden">
+      <div className="flex items-center gap-3">
+        {/* Hamburger - mobile only */}
+        <button
+          className="md:hidden p-1.5 rounded text-gray-500 hover:bg-gray-100"
+          onClick={onMenuClick}
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h1 className="text-base font-semibold text-gray-800">{getTitle()}</h1>
+      </div>
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
           <span className="text-blue-700 font-semibold text-xs">ZP</span>
