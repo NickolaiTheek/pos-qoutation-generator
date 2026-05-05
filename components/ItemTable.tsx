@@ -85,9 +85,9 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                   {item.warranty && <p className="text-xs text-blue-600 mt-0.5">{item.warranty}</p>}
                 </td>
                 <td className="py-3 px-3 text-center text-gray-700">{item.quantity}</td>
-                <td className="py-3 px-3 text-right text-gray-700">{formatCurrency(item.unitPrice)}</td>
+                <td className="py-3 px-3 text-right text-gray-700">{item.unitPrice === 0 ? <span className="text-green-600 font-semibold">Free</span> : formatCurrency(item.unitPrice)}</td>
                 <td className="py-3 px-3 text-right text-gray-500">{item.discount > 0 ? formatCurrency(item.discount) : "—"}</td>
-                <td className="py-3 px-3 text-right font-semibold text-gray-800">{formatCurrency(item.total)}</td>
+                <td className="py-3 px-3 text-right font-semibold text-gray-800">{item.total === 0 ? <span className="text-green-600">Free</span> : formatCurrency(item.total)}</td>
               </tr>
             ))}
           </tbody>
@@ -231,8 +231,8 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                     </select>
                   </div>
                 </td>
-                <td className="py-2 pr-2 text-right font-medium text-gray-700 whitespace-nowrap">
-                  {formatCurrency(item.total)}
+                <td className="py-2 pr-2 text-right font-medium whitespace-nowrap">
+                  {item.total === 0 ? <span className="text-green-600 font-semibold">Free</span> : <span className="text-gray-700">{formatCurrency(item.total)}</span>}
                 </td>
                 <td className="py-2">
                   <button
