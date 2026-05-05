@@ -16,48 +16,58 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
   const handleDownload = async () => {
     setLoading(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const jsPDF = (await import("jspdf")).default;
-
       const element = document.getElementById(elementId);
-      if (!element) return;
+      if (!element) {
+        alert("Could not find the document element.");
+        return;
+      }
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-      });
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * pageWidth) / canvas.width;
-
-      if (imgHeight <= pageHeight) {
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-      } else {
-        let position = 0;
-        let remainingHeight = imgHeight;
-        let first = true;
-        while (remainingHeight > 0) {
-          if (!first) pdf.addPage();
-          pdf.addImage(imgData, "PNG", 0, -position, imgWidth, imgHeight);
-          position += pageHeight;
-          remainingHeight -= pageHeight;
-          first = false;
+      // Collect all CSS from the document stylesheets
+      let css = "";
+      for (const sheet of Array.from(document.styleSheets)) {
+        try {
+          css += Array.from(sheet.cssRules).map((r) => r.cssText).join("\n");
+        } catch {
+          // cross-origin sheets — skip
         }
       }
 
-      pdf.save(`${filename}.pdf`);
+      const html = element.outerHTML;
+
+      const win = window.open("", "_blank", "width=900,height=700");
+      if (!win) {
+        alert("Please allow popups for this site to download the PDF.");
+        return;
+      }
+
+      win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${filename}</title>
+  <style>
+    ${css}
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    @page { size: A4; margin: 0; }
+    body { margin: 0; background: white; }
+  </style>
+</head>
+<body>
+  ${html}
+  <script>
+    window.onload = function () {
+      setTimeout(function () {
+        window.print();
+        setTimeout(function () { window.close(); }, 1000);
+      }, 600);
+    };
+  </script>
+</body>
+</html>`);
+      win.document.close();
     } catch (error) {
       console.error("PDF generation error:", error);
+      alert("Failed to generate PDF. Please use the Print button instead.");
     } finally {
       setLoading(false);
     }
