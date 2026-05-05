@@ -40,7 +40,7 @@ export default function EditQuotationPage() {
         productId: i.productId ?? "",
         name: i.name,
         description: i.description ?? "",
-        category: i.category || (p as Product[]).find(pr => pr.id === i.productId)?.category || "General",
+        category: (i.category && i.category !== "General" ? i.category : (p as Product[]).find(pr => pr.id === i.productId)?.category) || i.category || "General",
         quantity: i.quantity,
         unitPrice: i.unitPrice,
         discount: i.discount,
