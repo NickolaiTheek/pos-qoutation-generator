@@ -14,7 +14,7 @@ const itemSchema = z.object({
 });
 
 const quotationUpdateSchema = z.object({
-  customerId: z.string().min(1).optional().nullable(),
+  customerId: z.string().optional().nullable(),
   date: z.string().optional(),
   note: z.string().optional(),
   status: z.string().optional(),
@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const data = quotationUpdateSchema.parse(body);
 
     const updateData: Record<string, unknown> = {};
-    if (data.customerId) updateData.customerId = data.customerId;
+    if (data.customerId !== undefined) updateData.customerId = data.customerId ?? null;
     if (data.date) updateData.date = new Date(data.date);
     if (data.note !== undefined) updateData.note = data.note || null;
     if (data.status) updateData.status = data.status;
@@ -79,7 +79,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json(quotation);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to update quotation" }, { status: 500 });
   }

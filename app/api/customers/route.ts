@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(customer, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
     }
     console.error("Customers POST error:", error);
     return NextResponse.json({ error: "Failed to create customer" }, { status: 500 });

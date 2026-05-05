@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(quotation, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
     }
     console.error("Quotations POST error:", error);
     return NextResponse.json({ error: "Failed to create quotation" }, { status: 500 });

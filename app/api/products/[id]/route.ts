@@ -32,7 +32,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json(product);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }

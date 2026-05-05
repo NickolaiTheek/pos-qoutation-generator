@@ -59,7 +59,7 @@ export default function EditInvoicePage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId,
+          customerId: customerId || null,
           date: new Date(date).toISOString(),
           status,
           note,
