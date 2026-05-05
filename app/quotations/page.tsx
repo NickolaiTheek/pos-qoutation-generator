@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Quotation } from "@/types";
-import { ArrowRight, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Copy, Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -35,6 +35,35 @@ export default function QuotationsPage() {
     if (!confirm("Delete this quotation?")) return;
     await fetch("/api/quotations/" + id, { method: "DELETE" });
     fetchQuotations();
+  };
+
+  const handleDuplicate = async (id: string) => {
+    const res = await fetch("/api/quotations/" + id);
+    const q = await res.json();
+    const newRes = await fetch("/api/quotations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customerId: q.customerId ?? null,
+        date: new Date().toISOString(),
+        note: q.note ?? "",
+        status: "Draft",
+        items: (q.items ?? []).map((i: any) => ({
+          productId: i.productId ?? undefined,
+          name: i.name,
+          description: i.description ?? "",
+          category: i.category ?? "General",
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+          discount: i.discount,
+          warranty: i.warranty ?? "",
+        })),
+      }),
+    });
+    if (newRes.ok) {
+      const created = await newRes.json();
+      router.push("/quotations/" + created.id + "/edit");
+    }
   };
 
   const handleConvertToInvoice = async (q: Quotation) => {
@@ -129,6 +158,9 @@ export default function QuotationsPage() {
                       <div className="flex items-center gap-1 justify-end">
                         <Link href={"/quotations/" + q.id}><Button variant="ghost" size="icon" title="View"><Eye className="h-3.5 w-3.5" /></Button></Link>
                         <Link href={"/quotations/" + q.id + "/edit"}><Button variant="ghost" size="icon" title="Edit"><Pencil className="h-3.5 w-3.5" /></Button></Link>
+                        <Button variant="ghost" size="icon" title="Duplicate" onClick={() => handleDuplicate(q.id)}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
                         <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => handleConvertToInvoice(q)}>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
