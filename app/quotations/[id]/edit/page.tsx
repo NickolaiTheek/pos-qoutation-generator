@@ -44,7 +44,7 @@ export default function EditQuotationPage() {
         quantity: i.quantity,
         unitPrice: i.unitPrice,
         discount: i.discount,
-        warranty: i.warranty ?? "",
+        warranty: (i.warranty ?? "").replace("Year(s)", "Year Warranty").replace("Month(s)", "Month Warranty"),
         total: i.total,
       })));
     });
