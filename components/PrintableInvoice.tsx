@@ -24,13 +24,18 @@ export default function PrintableInvoice({
 }: PrintableInvoiceProps) {
   const items = invoice.items ?? [];
 
-  const categoryOrder: string[] = [];
   const grouped: Record<string, typeof items> = {};
   for (const item of items) {
     const cat = item.category || "General";
-    if (!grouped[cat]) { grouped[cat] = []; categoryOrder.push(cat); }
+    if (!grouped[cat]) { grouped[cat] = []; }
     grouped[cat].push(item);
   }
+  const CATEGORY_PRIORITY = ["Software", "Hardware", "Service", "Support", "General"];
+  const categoryOrder = Object.keys(grouped).sort((a, b) => {
+    const ai = CATEGORY_PRIORITY.indexOf(a);
+    const bi = CATEGORY_PRIORITY.indexOf(b);
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
 
   const grandTotal = invoice.grandTotal;
 
