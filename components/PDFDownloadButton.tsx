@@ -22,69 +22,58 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
         return;
       }
 
-      // Collect all CSS from the document stylesheets
-      let css = "";
-      for (const sheet of Array.from(document.styleSheets)) {
-        try {
-          css += Array.from(sheet.cssRules).map((r) => r.cssText).join("\n");
-        } catch {
-          // cross-origin sheets — skip
+      // html2canvas exports itself directly (CJS default), not as .default
+      const h2cMod = await import("html2canvas");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const html2canvas: (el: HTMLElement, opts?: any) => Promise<HTMLCanvasElement> =
+        (h2cMod as any).default ?? (h2cMod as any);
+
+      // jsPDF v4 uses named export
+      const { jsPDF } = await import("jspdf");
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      // A4 dimensions in mm with 10mm margins
+      const PAGE_W = 210;
+      const PAGE_H = 297;
+      const MARGIN = 10;
+      const contentW = PAGE_W - MARGIN * 2;
+
+      // Scale image to fit content width
+      const imgHeightMm = (canvas.height / canvas.width) * contentW;
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const usableH = PAGE_H - MARGIN * 2;
+
+      if (imgHeightMm <= usableH) {
+        // Single page
+        pdf.addImage(imgData, "PNG", MARGIN, MARGIN, contentW, imgHeightMm);
+      } else {
+        // Multi-page: slice the canvas image across pages
+        const pageCount = Math.ceil(imgHeightMm / usableH);
+        for (let page = 0; page < pageCount; page++) {
+          if (page > 0) pdf.addPage();
+          const yOffset = MARGIN - page * usableH;
+          pdf.addImage(imgData, "PNG", MARGIN, yOffset, contentW, imgHeightMm);
         }
       }
 
-      const html = element.outerHTML;
-
-      const win = window.open("", "_blank", "width=900,height=700");
-      if (!win) {
-        alert("Please allow popups for this site to download the PDF.");
-        return;
-      }
-
-      win.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>${filename}</title>
-  <style>
-    ${css}
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
-    @page {
-      size: A4 portrait;
-      margin: 8mm 8mm 8mm 8mm;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: white;
-      width: 100%;
-    }
-    /* Override the fixed 210mm width — let content fill the page */
-    #printable-quotation,
-    #printable-invoice {
-      width: 100% !important;
-      min-height: unset !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-    }
-  </style>
-</head>
-<body>
-  ${html}
-  <script>
-    window.onload = function () {
-      setTimeout(function () {
-        window.print();
-        setTimeout(function () { window.close(); }, 1500);
-      }, 800);
-    };
-  </script>
-</body>
-</html>`);
-      win.document.close();
+      pdf.save(`${filename}.pdf`);
     } catch (error) {
       console.error("PDF generation error:", error);
-      alert("Failed to generate PDF. Please use the Print button instead.");
+      alert("PDF generation failed. Please try the Print button instead.");
     } finally {
       setLoading(false);
     }
