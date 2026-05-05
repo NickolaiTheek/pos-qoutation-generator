@@ -1,5 +1,5 @@
-import { formatCurrency, formatDate } from "@/lib/utils";
 import { renderBold } from "@/components/ItemTable";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Quotation } from "@/types";
 
 const DEFAULT_NOTE =
@@ -61,7 +61,7 @@ export default function PrintableQuotation({
 
         {/* LEFT: logo + company contact */}
         <div style={p({ flex: "0 0 38%" })}>
-          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "100px", marginBottom: "8px", display: "block" })} />
+          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "100px", marginBottom: "8px", marginTop: "-8px", display: "block" })} />
           <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 3px 0" })}>{businessName}</p>
           {businessPhone && (
             <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 2px 0" })}>T: {businessPhone}</p>

@@ -213,10 +213,10 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                 <td className="py-2 pr-2">
                   <Input
                     type="number"
-                    min="1"
+                    min="0"
                     step="1"
                     value={item.quantity}
-                    onChange={(e) => updateItem(i, "quantity", parseFloat(e.target.value) || 1)}
+                    onChange={(e) => updateItem(i, "quantity", Math.max(0, parseFloat(e.target.value) || 0))}
                     className="w-16"
                   />
                 </td>

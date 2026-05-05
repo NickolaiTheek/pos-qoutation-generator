@@ -7,7 +7,7 @@ const itemSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
   category: z.string().optional().default("General"),
-  quantity: z.number().positive(),
+  quantity: z.number().min(0),
   unitPrice: z.number().min(0),
   discount: z.number().min(0).default(0),
   warranty: z.string().optional(),
