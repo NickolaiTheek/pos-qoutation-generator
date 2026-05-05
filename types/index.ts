@@ -31,6 +31,7 @@ export interface LineItem {
   productId?: string | null;
   name: string;
   description?: string;
+  category?: string;
   quantity: number;
   unitPrice: number;
   discount: number;
@@ -44,6 +45,7 @@ export interface QuotationItem {
   productId?: string | null;
   name: string;
   description?: string | null;
+  category?: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;
@@ -73,6 +75,7 @@ export interface InvoiceItem {
   productId?: string | null;
   name: string;
   description?: string | null;
+  category?: string | null;
   quantity: number;
   unitPrice: number;
   discount: number;

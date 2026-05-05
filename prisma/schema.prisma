@@ -70,6 +70,7 @@ model QuotationItem {
   productId   String?
   name        String
   description String?
+  category    String  @default("General")
   quantity    Float   @default(1)
   unitPrice   Float   @default(0)
   discount    Float   @default(0)
@@ -109,6 +110,7 @@ model InvoiceItem {
   productId   String?
   name        String
   description String?
+  category    String  @default("General")
   quantity    Float   @default(1)
   unitPrice   Float   @default(0)
   discount    Float   @default(0)

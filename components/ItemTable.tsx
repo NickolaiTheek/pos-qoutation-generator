@@ -16,6 +16,7 @@ interface ItemTableProps {
 const emptyItem = (): LineItem => ({
   name: "",
   description: "",
+  category: "General",
   quantity: 1,
   unitPrice: 0,
   discount: 0,
@@ -49,6 +50,7 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
         productId: product.id,
         name: product.name,
         description: product.description ?? "",
+        category: product.category ?? "General",
         unitPrice: product.defaultPrice,
         warranty: product.warranty ?? "",
         total: item.quantity * product.defaultPrice - item.discount,
@@ -118,6 +120,7 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase">Product (optional)</th>
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2">Name *</th>
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2">Description</th>
+              <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2 w-28">Category</th>
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2 w-16">Qty *</th>
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2 w-28">Unit Price *</th>
               <th className="pb-2 text-left text-xs font-medium text-gray-500 uppercase pl-2 w-24">Discount</th>
@@ -156,6 +159,19 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                     placeholder="Description"
                     className="min-w-[120px]"
                   />
+                </td>
+                <td className="py-2 pr-2">
+                  <select
+                    className="h-9 w-full rounded-lg border border-gray-200 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={item.category || "General"}
+                    onChange={(e) => updateItem(i, "category", e.target.value)}
+                  >
+                    <option value="General">General</option>
+                    <option value="Hardware">Hardware</option>
+                    <option value="Software">Software</option>
+                    <option value="Service">Service</option>
+                    <option value="Support">Support</option>
+                  </select>
                 </td>
                 <td className="py-2 pr-2">
                   <Input
