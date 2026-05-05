@@ -105,6 +105,7 @@ export interface Settings {
   address?: string | null;
   phone?: string | null;
   email?: string | null;
+  website?: string | null;
   defaultQuotationNote?: string | null;
   defaultInvoiceNote?: string | null;
 }

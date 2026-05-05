@@ -129,6 +129,7 @@ model Settings {
   address              String?
   phone                String?
   email                String?
+  website              String?
   defaultQuotationNote String?
   defaultInvoiceNote   String?
 

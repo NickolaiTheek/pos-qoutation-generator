@@ -66,6 +66,10 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="space-y-1">
+              <Label>Website</Label>
+              <Input value={(settings as any).website ?? ""} onChange={e => handleChange("website" as any, e.target.value)} placeholder="www.yourbusiness.com" />
+            </div>
+            <div className="space-y-1">
               <Label>Address</Label>
               <Textarea value={settings.address ?? ""} onChange={e => handleChange("address", e.target.value)} rows={2} className="resize-none" placeholder="Business address" />
             </div>

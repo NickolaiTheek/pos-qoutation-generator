@@ -66,7 +66,14 @@ export default function InvoiceDetailPage() {
         </div>
       </div>
 
-      <PrintableInvoice invoice={invoice} businessName={settings?.businessName} />
+      <PrintableInvoice
+        invoice={invoice}
+        businessName={settings?.businessName}
+        businessPhone={settings?.phone ?? undefined}
+        businessEmail={settings?.email ?? undefined}
+        businessAddress={settings?.address ?? undefined}
+        businessWeb={settings?.website ?? undefined}
+      />
     </div>
   );
 }

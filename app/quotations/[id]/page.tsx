@@ -84,7 +84,14 @@ export default function QuotationDetailPage() {
       </div>
 
       <div ref={printRef}>
-      <PrintableQuotation quotation={quotation} businessName={settings?.businessName} />
+      <PrintableQuotation
+        quotation={quotation}
+        businessName={settings?.businessName}
+        businessPhone={settings?.phone ?? undefined}
+        businessEmail={settings?.email ?? undefined}
+        businessAddress={settings?.address ?? undefined}
+        businessWeb={settings?.website ?? undefined}
+      />
       </div>
     </div>
   );
