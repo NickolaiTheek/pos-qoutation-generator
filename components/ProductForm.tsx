@@ -7,7 +7,8 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Product } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { Bold } from "lucide-react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -31,10 +32,13 @@ interface ProductFormProps {
 export default function ProductForm({ product, onSuccess, onCancel }: ProductFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const descRef = useRef<HTMLTextAreaElement | null>(null);
 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
@@ -102,12 +106,42 @@ export default function ProductForm({ product, onSuccess, onCancel }: ProductFor
 
       <div className="space-y-1.5">
         <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          {...register("description")}
-          placeholder="Product description..."
-          rows={2}
-        />
+        <div className="relative">
+          <Textarea
+            id="description"
+            ref={(el) => {
+              descRef.current = el;
+              register("description").ref(el);
+            }}
+            value={watch("description") ?? ""}
+            onChange={(e) => setValue("description", e.target.value)}
+            placeholder="Product description..."
+            rows={2}
+            className="pr-10"
+          />
+          <button
+            type="button"
+            title="Bold selected text (**text**)"
+            className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 font-bold text-sm"
+            onClick={() => {
+              const ta = descRef.current;
+              if (!ta) return;
+              const start = ta.selectionStart ?? 0;
+              const end = ta.selectionEnd ?? 0;
+              const val = watch("description") ?? "";
+              const selected = val.slice(start, end);
+              const newVal = val.slice(0, start) + "**" + (selected || "bold") + "**" + val.slice(end);
+              setValue("description", newVal);
+              setTimeout(() => {
+                ta.focus();
+                const newPos = start + 2 + (selected || "bold").length;
+                ta.setSelectionRange(start + 2, newPos);
+              }, 0);
+            }}
+          >
+            <Bold size={13} />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-1.5">
