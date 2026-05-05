@@ -164,19 +164,21 @@ export default function PrintableInvoice({
             <div style={p({ display: "flex", justifyContent: "flex-end", paddingBottom: "10px", borderBottom: "1px solid #ccc", marginBottom: "14px" })}>
               <table style={p({ borderCollapse: "collapse", fontSize: "11px", minWidth: "230px" })}>
                 <tbody>
-                  <tr>
-                    <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Sub Total</td>
-                    <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", minWidth: "90px" })}>{formatCurrency(catSubtotal)}</td>
-                  </tr>
                   {catDiscount > 0 && (
-                    <tr>
-                      <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Discount</td>
-                      <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", color: "#333" })}>-{formatCurrency(catDiscount)}</td>
-                    </tr>
+                    <>
+                      <tr>
+                        <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Sub Total</td>
+                        <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", minWidth: "90px" })}>{formatCurrency(catSubtotal)}</td>
+                      </tr>
+                      <tr>
+                        <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Cash Discount</td>
+                        <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", color: "#333" })}>-{formatCurrency(catDiscount)}</td>
+                      </tr>
+                    </>
                   )}
                   <tr>
-                    <td style={p({ padding: "3px 16px 3px 8px", fontWeight: 700, borderTop: "1px solid #ccc" })}>{cat} Total</td>
-                    <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", fontWeight: 700, borderTop: "1px solid #ccc" })}>{formatCurrency(catTotal)}</td>
+                    <td style={p({ padding: "3px 16px 3px 8px", fontWeight: 700, borderTop: catDiscount > 0 ? "1px solid #ccc" : "none" })}>{cat} Total</td>
+                    <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", fontWeight: 700, borderTop: catDiscount > 0 ? "1px solid #ccc" : "none", minWidth: "90px" })}>{formatCurrency(catTotal)}</td>
                   </tr>
                 </tbody>
               </table>
