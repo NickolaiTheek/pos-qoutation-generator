@@ -75,7 +75,7 @@ export default function PrintableInvoice({
 
         {/* LEFT: logo + company */}
         <div style={p({ flex: "0 0 38%" })}>
-          <img src="/logo.png" alt="Zero Pos" style={p({ width: "90px", marginBottom: "6px", display: "block" })} />
+          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "90px", marginBottom: "6px", display: "block" })} />
           <p style={p({ fontWeight: 700, fontSize: "13px", margin: "0 0 3px 0" })}>{businessName}</p>
           {businessPhone && (
             <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 2px 0" })}>T: {businessPhone}</p>
