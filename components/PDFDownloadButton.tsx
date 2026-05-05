@@ -47,9 +47,26 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
   <title>${filename}</title>
   <style>
     ${css}
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    @page { size: A4; margin: 0; }
-    body { margin: 0; background: white; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+    @page {
+      size: A4 portrait;
+      margin: 8mm 8mm 8mm 8mm;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      width: 100%;
+    }
+    /* Override the fixed 210mm width — let content fill the page */
+    #printable-quotation,
+    #printable-invoice {
+      width: 100% !important;
+      min-height: unset !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+    }
   </style>
 </head>
 <body>
@@ -58,8 +75,8 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
     window.onload = function () {
       setTimeout(function () {
         window.print();
-        setTimeout(function () { window.close(); }, 1000);
-      }, 600);
+        setTimeout(function () { window.close(); }, 1500);
+      }, 800);
     };
   </script>
 </body>

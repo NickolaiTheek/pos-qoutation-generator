@@ -26,7 +26,7 @@ export default function PrintableQuotation({
   return (
     <div
       id="printable-quotation"
-      className="bg-white w-[210mm] min-h-[297mm] mx-auto p-10 text-sm font-sans"
+      className="bg-white w-[210mm] min-h-[297mm] mx-auto px-8 py-8 text-sm font-sans"
       style={{ fontFamily: "Arial, sans-serif" }}
     >
       {/* Header */}
