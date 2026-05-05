@@ -164,7 +164,7 @@ export default function PrintableQuotation({
                         <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", minWidth: "90px" })}>{formatCurrency(catSubtotal)}</td>
                       </tr>
                       <tr>
-                        <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Cash Discount</td>
+                        <td style={p({ padding: "3px 16px 3px 8px", color: "#333" })}>Discount</td>
                         <td style={p({ padding: "3px 0 3px 8px", textAlign: "right", color: "#333" })}>-{formatCurrency(catDiscount)}</td>
                       </tr>
                     </>
