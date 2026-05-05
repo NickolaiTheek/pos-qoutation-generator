@@ -58,6 +58,7 @@ export default function NewInvoicePage() {
             productId: i.productId || undefined,
             name: i.name,
             description: i.description,
+            category: i.category || "General",
             quantity: i.quantity,
             unitPrice: i.unitPrice,
             discount: i.discount,
