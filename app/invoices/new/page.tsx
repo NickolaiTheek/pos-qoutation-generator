@@ -41,7 +41,6 @@ export default function NewInvoicePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId) { setError("Please select a customer."); return; }
     if (!items.some(i => i.name.trim())) { setError("Add at least one item."); return; }
     setSaving(true);
     setError("");
@@ -50,7 +49,7 @@ export default function NewInvoicePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId,
+          customerId: customerId || null,
           date: new Date(date).toISOString(),
           status,
           note,
@@ -84,7 +83,7 @@ export default function NewInvoicePage() {
           <CardHeader><CardTitle className="text-sm">Invoice Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1 sm:col-span-1">
-              <Label>Customer *</Label>
+              <Label>Customer (optional)</Label>
               <div className="flex gap-2">
                 <select value={customerId} onChange={e => setCustomerId(e.target.value)} className="flex-1 h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Select customer...</option>

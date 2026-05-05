@@ -41,7 +41,6 @@ export default function NewQuotationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId) { setError("Please select a customer."); return; }
     if (!items.some(i => i.name.trim())) { setError("Add at least one item."); return; }
     setSaving(true);
     setError("");
@@ -50,7 +49,7 @@ export default function NewQuotationPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customerId,
+          customerId: customerId || null,
           date: new Date(date).toISOString(),
           status,
           note,
@@ -84,7 +83,7 @@ export default function NewQuotationPage() {
           <CardHeader><CardTitle className="text-sm">Quotation Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1 sm:col-span-1">
-              <Label>Customer *</Label>
+              <Label>Customer (optional)</Label>
               <div className="flex gap-2">
                 <select
                   value={customerId}

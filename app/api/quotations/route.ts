@@ -14,7 +14,7 @@ const itemSchema = z.object({
 });
 
 const quotationSchema = z.object({
-  customerId: z.string().min(1, "Customer is required"),
+  customerId: z.string().min(1).optional().nullable(),
   date: z.string(),
   note: z.string().optional(),
   status: z.string().optional(),
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     const quotation = await prisma.quotation.create({
       data: {
         quotationNumber,
-        customerId: data.customerId,
+        customerId: data.customerId || null,
         date: new Date(data.date),
         subtotal,
         discountTotal,

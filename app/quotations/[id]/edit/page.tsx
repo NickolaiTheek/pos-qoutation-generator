@@ -52,7 +52,6 @@ export default function EditQuotationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerId) { setError("Please select a customer."); return; }
     setSaving(true);
     setError("");
     try {
@@ -93,7 +92,7 @@ export default function EditQuotationPage() {
           <CardHeader><CardTitle className="text-sm">Quotation Details</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1 sm:col-span-1">
-              <Label>Customer *</Label>
+              <Label>Customer (optional)</Label>
               <select value={customerId} onChange={e => setCustomerId(e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="">Select customer...</option>
                 {customers.map(c => (

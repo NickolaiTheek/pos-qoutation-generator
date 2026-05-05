@@ -47,7 +47,7 @@ model Product {
 model Quotation {
   id              String   @id @default(cuid())
   quotationNumber String   @unique
-  customerId      String
+  customerId      String?
   date            DateTime @default(now())
   subtotal        Float    @default(0)
   discountTotal   Float    @default(0)
@@ -57,7 +57,7 @@ model Quotation {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  customer Customer        @relation(fields: [customerId], references: [id])
+  customer Customer?       @relation(fields: [customerId], references: [id])
   items    QuotationItem[]
   invoices Invoice[]
 
@@ -87,7 +87,7 @@ model Invoice {
   id            String   @id @default(cuid())
   invoiceNumber String   @unique
   quotationId   String?
-  customerId    String
+  customerId    String?
   date          DateTime @default(now())
   subtotal      Float    @default(0)
   discountTotal Float    @default(0)
@@ -97,7 +97,7 @@ model Invoice {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  customer  Customer      @relation(fields: [customerId], references: [id])
+  customer  Customer?     @relation(fields: [customerId], references: [id])
   quotation Quotation?    @relation(fields: [quotationId], references: [id])
   items     InvoiceItem[]
 

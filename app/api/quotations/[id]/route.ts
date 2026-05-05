@@ -14,7 +14,7 @@ const itemSchema = z.object({
 });
 
 const quotationUpdateSchema = z.object({
-  customerId: z.string().min(1).optional(),
+  customerId: z.string().min(1).optional().nullable(),
   date: z.string().optional(),
   note: z.string().optional(),
   status: z.string().optional(),

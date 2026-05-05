@@ -15,7 +15,7 @@ const itemSchema = z.object({
 
 const invoiceSchema = z.object({
   quotationId: z.string().optional().nullable(),
-  customerId: z.string().min(1, "Customer is required"),
+  customerId: z.string().min(1).optional().nullable(),
   date: z.string(),
   note: z.string().optional(),
   status: z.string().optional(),
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       data: {
         invoiceNumber,
         quotationId: data.quotationId || null,
-        customerId: data.customerId,
+        customerId: data.customerId || null,
         date: new Date(data.date),
         subtotal,
         discountTotal,
