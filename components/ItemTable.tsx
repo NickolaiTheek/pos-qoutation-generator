@@ -249,7 +249,7 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                       value={item.warranty ? parseInt(item.warranty) || "" : ""}
                       onChange={(e) => {
                         const num = e.target.value;
-                        const unit = item.warranty?.split(" ").slice(1).join(" ") || "Year(s)";
+                        const unit = item.warranty?.split(" ").slice(1).join(" ") || "Year Warranty";
                         updateItem(i, "warranty", num ? `${num} ${unit}` : "");
                       }}
                       placeholder="0"
@@ -257,14 +257,14 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                     />
                     <select
                       className="h-10 rounded-lg border border-gray-200 bg-white px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      value={item.warranty?.split(" ").slice(1).join(" ") || "Year(s)"}
+                      value={item.warranty?.split(" ").slice(1).join(" ") || "Year Warranty"}
                       onChange={(e) => {
                         const num = item.warranty ? parseInt(item.warranty) || "" : "";
                         updateItem(i, "warranty", num !== "" ? `${num} ${e.target.value}` : "");
                       }}
                     >
-                      <option value="Year(s)">Year(s)</option>
-                      <option value="Month(s)">Month(s)</option>
+                      <option value="Year Warranty">Year Warranty</option>
+                      <option value="Month Warranty">Month Warranty</option>
                     </select>
                   </div>
                 </td>
