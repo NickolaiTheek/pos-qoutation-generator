@@ -39,9 +39,7 @@ export default function Sidebar({ isOpen = false, onClose }: { isOpen?: boolean;
       {/* Logo */}
       <div className="flex items-center justify-between gap-3 px-6 py-5 border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">ZP</span>
-          </div>
+          <img src="/logo.png" alt="Zero Pos" className="h-9 w-9 rounded-lg object-contain bg-white" />
           <div>
             <p className="font-bold text-gray-900 text-sm leading-tight">Zero Pos</p>
             <p className="text-xs text-gray-400 leading-tight">POS System</p>

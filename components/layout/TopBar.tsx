@@ -40,8 +40,8 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         <h1 className="text-base font-semibold text-gray-800">{getTitle()}</h1>
       </div>
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-          <span className="text-blue-700 font-semibold text-xs">ZP</span>
+        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="/logo.png" alt="Zero Pos" className="w-full h-full object-contain" />
         </div>
       </div>
     </header>

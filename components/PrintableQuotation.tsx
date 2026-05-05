@@ -67,12 +67,7 @@ export default function PrintableQuotation({
 
         {/* LEFT: logo + company */}
         <div style={p({ flex: "0 0 38%" })}>
-          <div style={p({
-            width: "64px", height: "64px", background: "#1a1a1a", borderRadius: "8px",
-            display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px",
-          })}>
-            <span style={p({ color: "#fff", fontWeight: 900, fontSize: "20px", letterSpacing: "-1px" })}>ZP</span>
-          </div>
+          <img src="/logo.png" alt="Zero Pos" style={p({ width: "90px", marginBottom: "6px", display: "block" })} />
           <p style={p({ fontWeight: 700, fontSize: "13px", margin: "0 0 3px 0" })}>{businessName}</p>
           {businessPhone && (
             <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 2px 0" })}>T: {businessPhone}</p>
