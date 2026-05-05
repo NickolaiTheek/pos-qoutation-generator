@@ -56,20 +56,13 @@ export default function PrintableQuotation({
       })}
     >
 
-      {/* DATE / QUOTE# top right */}
-      <div style={p({ textAlign: "right", marginBottom: "6px", lineHeight: 1.7, fontSize: "11px" })}>
-        <span style={p({ fontWeight: 700 })}>DATE:&nbsp;&nbsp;</span>{formatDate(quotation.date)}
-        <br />
-        <span style={p({ fontWeight: 700 })}>Quote No:&nbsp;&nbsp;</span>#{quotation.quotationNumber}
-      </div>
-
       {/* 3-COLUMN HEADER */}
       <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start" })}>
 
-        {/* LEFT: logo + company */}
+        {/* LEFT: logo + company contact */}
         <div style={p({ flex: "0 0 38%" })}>
-          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "90px", marginBottom: "6px", display: "block" })} />
-          <p style={p({ fontWeight: 700, fontSize: "13px", margin: "0 0 3px 0" })}>{businessName}</p>
+          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "100px", marginBottom: "8px", display: "block" })} />
+          <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 3px 0" })}>{businessName}</p>
           {businessPhone && (
             <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 2px 0" })}>T: {businessPhone}</p>
           )}
@@ -83,16 +76,22 @@ export default function PrintableQuotation({
         </div>
 
         {/* CENTER: title */}
-        <div style={p({ flex: "0 0 30%", textAlign: "center", paddingTop: "6px" })}>
+        <div style={p({ flex: "0 0 26%", textAlign: "center", paddingTop: "28px" })}>
           <h1 style={p({ fontWeight: 700, fontSize: "26px", margin: 0, letterSpacing: "0.5px" })}>
             Quotation
           </h1>
         </div>
 
-        {/* RIGHT: TO: customer */}
-        <div style={p({ flex: "0 0 30%", textAlign: "right", paddingTop: "6px" })}>
-          <p style={p({ fontWeight: 700, fontSize: "11px", margin: "0 0 4px 0" })}>TO:</p>
-          <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 2px 0" })}>{quotation.customer?.name}</p>
+        {/* RIGHT: date/quote# then TO: customer */}
+        <div style={p({ flex: "0 0 30%", textAlign: "right" })}>
+          {/* Date & Quote No */}
+          <div style={p({ lineHeight: 1.8, fontSize: "11px", marginBottom: "10px" })}>
+            <span style={p({ fontWeight: 700 })}>DATE:&nbsp;&nbsp;</span>{formatDate(quotation.date)}<br />
+            <span style={p({ fontWeight: 700 })}>Quote No:&nbsp;&nbsp;</span>#{quotation.quotationNumber}
+          </div>
+          {/* TO: */}
+          <p style={p({ fontWeight: 700, fontSize: "11px", margin: "0 0 3px 0" })}>TO:</p>
+          <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 2px 0" })}>{quotation.customer?.name ?? ""}</p>
           {quotation.customer?.businessName && (
             <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 1px 0" })}>{quotation.customer.businessName}</p>
           )}
