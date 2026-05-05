@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { renderBold } from "@/components/ItemTable";
 import type { Quotation } from "@/types";
 
 const DEFAULT_NOTE =
@@ -135,7 +136,7 @@ export default function PrintableQuotation({
                     <td style={p({ padding: "7px 8px", verticalAlign: "top" })}>
                       <span style={p({ fontWeight: 700 })}>{item.name}</span>
                       {item.description && (
-                        <><br /><span style={p({ fontWeight: 400, fontSize: "10.5px", color: "#555" })}>{item.description}</span></>
+                        <><br /><span style={p({ fontWeight: 400, fontSize: "10.5px", color: "#555" })}>{renderBold(item.description)}</span></>
                       )}
                       {item.warranty && (
                         <><br /><span style={p({ fontStyle: "italic", fontSize: "10px", color: "#444" })}>{item.warranty}</span></>

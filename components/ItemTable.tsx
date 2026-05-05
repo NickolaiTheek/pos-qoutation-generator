@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
 import type { LineItem, Product } from "@/types";
-import { Plus, Trash2 } from "lucide-react";
+import { Bold, Plus, Trash2 } from "lucide-react";
+import { useRef } from "react";
+
+// Render **bold** markers as <strong> elements
+export function renderBold(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={i}>{part.slice(2, -2)}</strong>
+      : part
+  );
+}
 
 interface ItemTableProps {
   items: LineItem[];
@@ -26,6 +37,7 @@ const emptyItem = (): LineItem => ({
 });
 
 export default function ItemTable({ items, products, onChange, readOnly }: ItemTableProps) {
+  const descRefs = useRef<(HTMLInputElement | null)[]>([]);
   const updateItem = (index: number, field: keyof LineItem, value: string | number | null) => {
     const updated = items.map((item, i) => {
       if (i !== index) return item;
@@ -81,7 +93,7 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
               <tr key={i} className="border-b border-gray-100">
                 <td className="py-3 px-3">
                   <p className="font-medium text-gray-800">{item.name}</p>
-                  {item.description && <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>}
+                  {item.description && <p className="text-xs text-gray-500 mt-0.5">{renderBold(item.description)}</p>}
                   {item.warranty && <p className="text-xs text-blue-600 mt-0.5">{item.warranty}</p>}
                 </td>
                 <td className="py-3 px-3 text-center text-gray-700">{item.quantity}</td>
@@ -153,12 +165,37 @@ export default function ItemTable({ items, products, onChange, readOnly }: ItemT
                   />
                 </td>
                 <td className="py-2 pr-2">
-                  <Input
-                    value={item.description}
-                    onChange={(e) => updateItem(i, "description", e.target.value)}
-                    placeholder="Description"
-                    className="min-w-[120px]"
-                  />
+                  <div className="flex items-center gap-1 min-w-[150px]">
+                    <Input
+                      ref={(el) => { descRefs.current[i] = el; }}
+                      value={item.description}
+                      onChange={(e) => updateItem(i, "description", e.target.value)}
+                      placeholder="Description"
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      title="Bold selected text (**text**)"
+                      className="h-9 w-8 flex items-center justify-center rounded border border-gray-200 bg-white hover:bg-gray-100 text-gray-600 font-bold text-sm shrink-0"
+                      onClick={() => {
+                        const input = descRefs.current[i];
+                        if (!input) return;
+                        const start = input.selectionStart ?? 0;
+                        const end = input.selectionEnd ?? 0;
+                        const val = item.description ?? "";
+                        const selected = val.slice(start, end);
+                        const newVal = val.slice(0, start) + "**" + (selected || "bold") + "**" + val.slice(end);
+                        updateItem(i, "description", newVal);
+                        setTimeout(() => {
+                          input.focus();
+                          const newPos = start + 2 + (selected || "bold").length;
+                          input.setSelectionRange(start + 2, newPos);
+                        }, 0);
+                      }}
+                    >
+                      <Bold size={13} />
+                    </button>
+                  </div>
                 </td>
                 <td className="py-2 pr-2">
                   <select
