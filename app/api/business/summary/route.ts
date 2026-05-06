@@ -1,23 +1,44 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const [expenseAgg, totalInvoiceValue, totalDebtAgg, totalDebtPaidAgg, expenseByCategory] = await Promise.all([
-      prisma.expense.aggregate({ _sum: { amount: true } }),
-      prisma.invoice.aggregate({ _sum: { grandTotal: true }, where: { status: "Paid" } }),
-      prisma.debtRecord.aggregate({ _sum: { totalAmount: true } }),
-      prisma.debtRecord.aggregate({ _sum: { paidAmount: true } }),
-      prisma.expense.groupBy({ by: ["category"], _sum: { amount: true }, orderBy: { _sum: { amount: "desc" } } }),
+    const [expenseSnap, invoiceSnap, debtSnap] = await Promise.all([
+      getDocs(collection(db, "expenses")),
+      getDocs(query(collection(db, "invoices"), where("status", "==", "Paid"))),
+      getDocs(collection(db, "debt_records")),
     ]);
 
+    const totalExpenses = expenseSnap.docs.reduce(
+      (s, d) => s + ((d.data().amount as number) ?? 0),
+      0
+    );
+    const totalRevenue = invoiceSnap.docs.reduce(
+      (s, d) => s + ((d.data().grandTotal as number) ?? 0),
+      0
+    );
+    const debtDocs = debtSnap.docs.map((d) => d.data());
+    const totalDebt = debtDocs.reduce((s, d) => s + ((d.totalAmount as number) ?? 0), 0);
+    const totalDebtPaid = debtDocs.reduce((s, d) => s + ((d.paidAmount as number) ?? 0), 0);
+    const outstandingDebt = totalDebt - totalDebtPaid;
+
+    const categoryMap: Record<string, number> = {};
+    for (const d of expenseSnap.docs) {
+      const { category, amount } = d.data() as { category: string; amount: number };
+      categoryMap[category] = (categoryMap[category] ?? 0) + amount;
+    }
+    const expenseByCategory = Object.entries(categoryMap)
+      .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => b.total - a.total);
+
     return NextResponse.json({
-      totalExpenses: expenseAgg._sum.amount ?? 0,
-      totalRevenue: totalInvoiceValue._sum.grandTotal ?? 0,
-      totalDebt: totalDebtAgg._sum.totalAmount ?? 0,
-      totalDebtPaid: totalDebtPaidAgg._sum.paidAmount ?? 0,
-      outstandingDebt: (totalDebtAgg._sum.totalAmount ?? 0) - (totalDebtPaidAgg._sum.paidAmount ?? 0),
-      expenseByCategory: expenseByCategory.map(e => ({ category: e.category, total: e._sum.amount ?? 0 })),
+      totalExpenses,
+      totalRevenue,
+      totalDebt,
+      totalDebtPaid,
+      outstandingDebt,
+      expenseByCategory,
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch business summary" }, { status: 500 });

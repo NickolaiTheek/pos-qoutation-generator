@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db, docToJSON } from "@/lib/firebase";
+import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -24,13 +25,11 @@ const invoiceUpdateSchema = z.object({
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: { customer: true, items: true },
-    });
+    const snap = await getDoc(doc(db, "invoices", id));
+    const invoice = docToJSON(snap);
     if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(invoice);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch invoice" }, { status: 500 });
   }
 }
@@ -41,8 +40,18 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const data = invoiceUpdateSchema.parse(body);
 
-    const updateData: Record<string, unknown> = {};
-    if (data.customerId !== undefined) updateData.customerId = data.customerId ?? null;
+    const updateData: Record<string, unknown> = { updatedAt: serverTimestamp() };
+
+    if (data.customerId !== undefined) {
+      updateData.customerId = data.customerId ?? null;
+      if (data.customerId) {
+        const customerSnap = await getDoc(doc(db, "customers", data.customerId));
+        updateData.customer = docToJSON(customerSnap);
+      } else {
+        updateData.customer = null;
+      }
+    }
+
     if (data.date) updateData.date = new Date(data.date);
     if (data.note !== undefined) updateData.note = data.note || null;
     if (data.status) updateData.status = data.status;
@@ -53,33 +62,28 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       updateData.subtotal = subtotal;
       updateData.discountTotal = discountTotal;
       updateData.grandTotal = subtotal - discountTotal;
-
-      await prisma.invoiceItem.deleteMany({ where: { invoiceId: id } });
-      updateData.items = {
-        create: data.items.map((item) => ({
-          productId: item.productId || null,
-          name: item.name,
-          description: item.description || null,
-          category: item.category || "General",
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          discount: item.discount,
-          total: item.quantity * item.unitPrice - item.discount,
-          warranty: item.warranty || null,
-        })),
-      };
+      updateData.items = data.items.map((item) => ({
+        id: crypto.randomUUID(),
+        invoiceId: id,
+        productId: item.productId || null,
+        name: item.name,
+        description: item.description || null,
+        category: item.category || "General",
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        total: item.quantity * item.unitPrice - item.discount,
+        warranty: item.warranty || null,
+      }));
     }
 
-    const invoice = await prisma.invoice.update({
-      where: { id },
-      data: updateData as Parameters<typeof prisma.invoice.update>[0]["data"],
-      include: { customer: true, items: true },
-    });
-
-    return NextResponse.json(invoice);
+    const ref = doc(db, "invoices", id);
+    await updateDoc(ref, updateData);
+    const snap = await getDoc(ref);
+    return NextResponse.json(docToJSON(snap));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to update invoice" }, { status: 500 });
   }
@@ -88,9 +92,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await prisma.invoice.delete({ where: { id } });
+    await deleteDoc(doc(db, "invoices", id));
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete invoice" }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db, docsToJSON } from "@/lib/firebase";
+import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -14,19 +15,21 @@ const productSchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search") ?? "";
+    const search = (searchParams.get("search") ?? "").toLowerCase();
     const activeOnly = searchParams.get("active") === "true";
 
-    const products = await prisma.product.findMany({
-      where: {
-        ...(search ? { name: { contains: search } } : {}),
-        ...(activeOnly ? { isActive: true } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const snap = await getDocs(query(collection(db, "products"), orderBy("createdAt", "desc")));
+    let products = docsToJSON(snap.docs);
+
+    if (search) {
+      products = products.filter((p) => (p.name as string).toLowerCase().includes(search));
+    }
+    if (activeOnly) {
+      products = products.filter((p) => p.isActive === true);
+    }
 
     return NextResponse.json(products);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
   }
 }
@@ -36,8 +39,20 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = productSchema.parse(body);
 
-    const product = await prisma.product.create({
-      data: {
+    const ref = await addDoc(collection(db, "products"), {
+      name: data.name,
+      description: data.description || null,
+      category: data.category,
+      defaultPrice: data.defaultPrice,
+      warranty: data.warranty || null,
+      isActive: data.isActive ?? true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return NextResponse.json(
+      {
+        id: ref.id,
         name: data.name,
         description: data.description || null,
         category: data.category,
@@ -45,12 +60,11 @@ export async function POST(req: NextRequest) {
         warranty: data.warranty || null,
         isActive: data.isActive ?? true,
       },
-    });
-
-    return NextResponse.json(product, { status: 201 });
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
   }

@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db, docToJSON } from "@/lib/firebase";
+import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -15,20 +16,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const body = await req.json();
     const data = expenseSchema.parse(body);
-    const expense = await prisma.expense.update({
-      where: { id },
-      data: {
-        title: data.title,
-        amount: data.amount,
-        category: data.category,
-        description: data.description || null,
-        date: new Date(data.date),
-      },
+
+    const ref = doc(db, "expenses", id);
+    await updateDoc(ref, {
+      title: data.title,
+      amount: data.amount,
+      category: data.category,
+      description: data.description || null,
+      date: new Date(data.date),
+      updatedAt: serverTimestamp(),
     });
-    return NextResponse.json(expense);
+
+    const snap = await getDoc(ref);
+    return NextResponse.json(docToJSON(snap));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to update expense" }, { status: 500 });
   }
@@ -37,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await prisma.expense.delete({ where: { id } });
+    await deleteDoc(doc(db, "expenses", id));
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Failed to delete expense" }, { status: 500 });

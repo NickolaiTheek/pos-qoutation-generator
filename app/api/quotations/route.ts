@@ -1,4 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { db, docToJSON, docsToJSON } from "@/lib/firebase";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -22,42 +33,39 @@ const quotationSchema = z.object({
 });
 
 async function getNextQuotationNumber(): Promise<string> {
-  const last = await prisma.quotation.findFirst({
-    orderBy: { quotationNumber: "desc" },
-  });
-  if (!last) return "QTN-00001";
-  const num = parseInt(last.quotationNumber.replace("QTN-", ""), 10);
+  const snap = await getDocs(
+    query(collection(db, "quotations"), orderBy("quotationNumber", "desc"), limit(1))
+  );
+  if (snap.empty) return "QTN-00001";
+  const last = snap.docs[0].data().quotationNumber as string;
+  const num = parseInt(last.replace("QTN-", ""), 10);
   return `QTN-${String(num + 1).padStart(5, "0")}`;
 }
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search") ?? "";
+    const search = (searchParams.get("search") ?? "").toLowerCase();
     const status = searchParams.get("status") ?? "";
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    const quotations = await prisma.quotation.findMany({
-      where: {
-        AND: [
-          search
-            ? {
-                OR: [
-                  { quotationNumber: { contains: search } },
-                  { customer: { name: { contains: search } } },
-                  { customer: { mobile: { contains: search } } },
-                ],
-              }
-            : {},
-          status ? { status } : {},
-          dateFrom ? { date: { gte: new Date(dateFrom) } } : {},
-          dateTo ? { date: { lte: new Date(dateTo) } } : {},
-        ],
-      },
-      include: { customer: true, items: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const snap = await getDocs(query(collection(db, "quotations"), orderBy("createdAt", "desc")));
+    let quotations = docsToJSON(snap.docs);
+
+    if (search) {
+      quotations = quotations.filter((q) => {
+        const customer = q.customer as Record<string, unknown> | null;
+        return (
+          (q.quotationNumber as string).toLowerCase().includes(search) ||
+          ((customer?.name as string) ?? "").toLowerCase().includes(search) ||
+          ((customer?.mobile as string) ?? "").toLowerCase().includes(search)
+        );
+      });
+    }
+    if (status) quotations = quotations.filter((q) => q.status === status);
+    if (dateFrom) quotations = quotations.filter((q) => new Date(q.date as string) >= new Date(dateFrom));
+    if (dateTo) quotations = quotations.filter((q) => new Date(q.date as string) <= new Date(dateTo));
 
     return NextResponse.json(quotations);
   } catch (error) {
@@ -71,47 +79,52 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = quotationSchema.parse(body);
 
-    const subtotal = data.items.reduce((sum, item) => {
-      return sum + item.quantity * item.unitPrice;
-    }, 0);
+    const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const discountTotal = data.items.reduce((sum, item) => sum + item.discount, 0);
     const grandTotal = subtotal - discountTotal;
 
     const quotationNumber = await getNextQuotationNumber();
 
-    const quotation = await prisma.quotation.create({
-      data: {
-        quotationNumber,
-        customerId: data.customerId || null,
-        date: new Date(data.date),
-        subtotal,
-        discountTotal,
-        grandTotal,
-        note: data.note || null,
-        status: data.status || "Draft",
-        items: {
-          create: data.items.map((item) => ({
-            productId: item.productId || null,
-            name: item.name,
-            description: item.description || null,
-            category: item.category || "General",
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount,
-            total: item.quantity * item.unitPrice - item.discount,
-            warranty: item.warranty || null,
-          })),
-        },
-      },
-      include: { customer: true, items: true },
+    let customer: Record<string, unknown> | null = null;
+    if (data.customerId) {
+      const customerSnap = await getDoc(doc(db, "customers", data.customerId));
+      customer = docToJSON(customerSnap);
+    }
+
+    const ref = await addDoc(collection(db, "quotations"), {
+      quotationNumber,
+      customerId: data.customerId || null,
+      customer,
+      date: new Date(data.date),
+      subtotal,
+      discountTotal,
+      grandTotal,
+      note: data.note || null,
+      status: data.status || "Draft",
+      items: data.items.map((item) => ({
+        id: crypto.randomUUID(),
+        productId: item.productId || null,
+        name: item.name,
+        description: item.description || null,
+        category: item.category || "General",
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        total: item.quantity * item.unitPrice - item.discount,
+        warranty: item.warranty || null,
+      })),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
-    return NextResponse.json(quotation, { status: 201 });
+    const snap = await getDoc(ref);
+    return NextResponse.json(docToJSON(snap), { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     console.error("Quotations POST error:", error);
     return NextResponse.json({ error: "Failed to create quotation" }, { status: 500 });
   }
 }
+

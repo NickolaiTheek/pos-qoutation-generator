@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db, docToJSON } from "@/lib/firebase";
+import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -17,22 +18,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const body = await req.json();
     const data = productSchema.parse(body);
 
-    const product = await prisma.product.update({
-      where: { id },
-      data: {
-        name: data.name,
-        description: data.description || null,
-        category: data.category,
-        defaultPrice: data.defaultPrice,
-        warranty: data.warranty || null,
-        isActive: data.isActive ?? true,
-      },
+    const ref = doc(db, "products", id);
+    await updateDoc(ref, {
+      name: data.name,
+      description: data.description || null,
+      category: data.category,
+      defaultPrice: data.defaultPrice,
+      warranty: data.warranty || null,
+      isActive: data.isActive ?? true,
+      updatedAt: serverTimestamp(),
     });
 
-    return NextResponse.json(product);
+    const snap = await getDoc(ref);
+    return NextResponse.json(docToJSON(snap));
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 });
   }
@@ -41,9 +42,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    await prisma.product.delete({ where: { id } });
+    await deleteDoc(doc(db, "products", id));
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to delete product" }, { status: 500 });
   }
 }

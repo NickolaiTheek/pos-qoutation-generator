@@ -1,37 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { db, docsToJSON } from "@/lib/firebase";
+import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const [
-      totalQuotations,
-      totalInvoices,
-      quotationAgg,
-      invoiceAgg,
-      recentQuotations,
-      recentInvoices,
-    ] = await Promise.all([
-      prisma.quotation.count(),
-      prisma.invoice.count(),
-      prisma.quotation.aggregate({ _sum: { grandTotal: true } }),
-      prisma.invoice.aggregate({ _sum: { grandTotal: true } }),
-      prisma.quotation.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { customer: true },
-      }),
-      prisma.invoice.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: { customer: true },
-      }),
+    const [quotationSnap, invoiceSnap, recentQuotationSnap, recentInvoiceSnap] = await Promise.all([
+      getDocs(collection(db, "quotations")),
+      getDocs(collection(db, "invoices")),
+      getDocs(query(collection(db, "quotations"), orderBy("createdAt", "desc"), limit(5))),
+      getDocs(query(collection(db, "invoices"), orderBy("createdAt", "desc"), limit(5))),
     ]);
+
+    const totalQuotations = quotationSnap.size;
+    const totalInvoices = invoiceSnap.size;
+    const totalQuotationValue = quotationSnap.docs.reduce(
+      (s, d) => s + ((d.data().grandTotal as number) ?? 0),
+      0
+    );
+    const totalInvoiceValue = invoiceSnap.docs.reduce(
+      (s, d) => s + ((d.data().grandTotal as number) ?? 0),
+      0
+    );
+    const recentQuotations = docsToJSON(recentQuotationSnap.docs);
+    const recentInvoices = docsToJSON(recentInvoiceSnap.docs);
 
     return NextResponse.json({
       totalQuotations,
       totalInvoices,
-      totalQuotationValue: quotationAgg._sum.grandTotal ?? 0,
-      totalInvoiceValue: invoiceAgg._sum.grandTotal ?? 0,
+      totalQuotationValue,
+      totalInvoiceValue,
       recentQuotations,
       recentInvoices,
     });

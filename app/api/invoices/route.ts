@@ -1,4 +1,15 @@
-import { prisma } from "@/lib/prisma";
+import { db, docToJSON, docsToJSON } from "@/lib/firebase";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -23,42 +34,39 @@ const invoiceSchema = z.object({
 });
 
 async function getNextInvoiceNumber(): Promise<string> {
-  const last = await prisma.invoice.findFirst({
-    orderBy: { invoiceNumber: "desc" },
-  });
-  if (!last) return "INV-00001";
-  const num = parseInt(last.invoiceNumber.replace("INV-", ""), 10);
+  const snap = await getDocs(
+    query(collection(db, "invoices"), orderBy("invoiceNumber", "desc"), limit(1))
+  );
+  if (snap.empty) return "INV-00001";
+  const last = snap.docs[0].data().invoiceNumber as string;
+  const num = parseInt(last.replace("INV-", ""), 10);
   return `INV-${String(num + 1).padStart(5, "0")}`;
 }
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get("search") ?? "";
+    const search = (searchParams.get("search") ?? "").toLowerCase();
     const status = searchParams.get("status") ?? "";
     const dateFrom = searchParams.get("dateFrom");
     const dateTo = searchParams.get("dateTo");
 
-    const invoices = await prisma.invoice.findMany({
-      where: {
-        AND: [
-          search
-            ? {
-                OR: [
-                  { invoiceNumber: { contains: search } },
-                  { customer: { name: { contains: search } } },
-                  { customer: { mobile: { contains: search } } },
-                ],
-              }
-            : {},
-          status ? { status } : {},
-          dateFrom ? { date: { gte: new Date(dateFrom) } } : {},
-          dateTo ? { date: { lte: new Date(dateTo) } } : {},
-        ],
-      },
-      include: { customer: true, items: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const snap = await getDocs(query(collection(db, "invoices"), orderBy("createdAt", "desc")));
+    let invoices = docsToJSON(snap.docs);
+
+    if (search) {
+      invoices = invoices.filter((inv) => {
+        const customer = inv.customer as Record<string, unknown> | null;
+        return (
+          (inv.invoiceNumber as string).toLowerCase().includes(search) ||
+          ((customer?.name as string) ?? "").toLowerCase().includes(search) ||
+          ((customer?.mobile as string) ?? "").toLowerCase().includes(search)
+        );
+      });
+    }
+    if (status) invoices = invoices.filter((inv) => inv.status === status);
+    if (dateFrom) invoices = invoices.filter((inv) => new Date(inv.date as string) >= new Date(dateFrom));
+    if (dateTo) invoices = invoices.filter((inv) => new Date(inv.date as string) <= new Date(dateTo));
 
     return NextResponse.json(invoices);
   } catch (error) {
@@ -78,38 +86,44 @@ export async function POST(req: NextRequest) {
 
     const invoiceNumber = await getNextInvoiceNumber();
 
-    const invoice = await prisma.invoice.create({
-      data: {
-        invoiceNumber,
-        quotationId: data.quotationId || null,
-        customerId: data.customerId || null,
-        date: new Date(data.date),
-        subtotal,
-        discountTotal,
-        grandTotal,
-        note: data.note || null,
-        status: data.status || "Unpaid",
-        items: {
-          create: data.items.map((item) => ({
-            productId: item.productId || null,
-            name: item.name,
-            description: item.description || null,
-            category: item.category || "General",
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            discount: item.discount,
-            total: item.quantity * item.unitPrice - item.discount,
-            warranty: item.warranty || null,
-          })),
-        },
-      },
-      include: { customer: true, items: true },
+    let customer: Record<string, unknown> | null = null;
+    if (data.customerId) {
+      const customerSnap = await getDoc(doc(db, "customers", data.customerId));
+      customer = docToJSON(customerSnap);
+    }
+
+    const ref = await addDoc(collection(db, "invoices"), {
+      invoiceNumber,
+      quotationId: data.quotationId || null,
+      customerId: data.customerId || null,
+      customer,
+      date: new Date(data.date),
+      subtotal,
+      discountTotal,
+      grandTotal,
+      note: data.note || null,
+      status: data.status || "Unpaid",
+      items: data.items.map((item) => ({
+        id: crypto.randomUUID(),
+        productId: item.productId || null,
+        name: item.name,
+        description: item.description || null,
+        category: item.category || "General",
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        discount: item.discount,
+        total: item.quantity * item.unitPrice - item.discount,
+        warranty: item.warranty || null,
+      })),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
-    return NextResponse.json(invoice, { status: 201 });
+    const snap = await getDoc(ref);
+    return NextResponse.json(docToJSON(snap), { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     console.error("Invoices POST error:", error);
     return NextResponse.json({ error: "Failed to create invoice" }, { status: 500 });

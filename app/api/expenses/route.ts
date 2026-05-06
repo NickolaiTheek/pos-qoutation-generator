@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db, docsToJSON } from "@/lib/firebase";
+import { addDoc, collection, getDocs, orderBy, query, serverTimestamp } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -14,10 +15,12 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category") ?? "";
-    const expenses = await prisma.expense.findMany({
-      where: category ? { category } : undefined,
-      orderBy: { date: "desc" },
-    });
+
+    const snap = await getDocs(query(collection(db, "expenses"), orderBy("date", "desc")));
+    let expenses = docsToJSON(snap.docs);
+
+    if (category) expenses = expenses.filter((e) => e.category === category);
+
     return NextResponse.json(expenses);
   } catch {
     return NextResponse.json({ error: "Failed to fetch expenses" }, { status: 500 });
@@ -28,19 +31,31 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = expenseSchema.parse(body);
-    const expense = await prisma.expense.create({
-      data: {
+
+    const ref = await addDoc(collection(db, "expenses"), {
+      title: data.title,
+      amount: data.amount,
+      category: data.category,
+      description: data.description || null,
+      date: new Date(data.date),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    return NextResponse.json(
+      {
+        id: ref.id,
         title: data.title,
         amount: data.amount,
         category: data.category,
         description: data.description || null,
-        date: new Date(data.date),
+        date: data.date,
       },
-    });
-    return NextResponse.json(expense, { status: 201 });
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues.map(i => i.message).join(", ") }, { status: 400 });
+      return NextResponse.json({ error: error.issues.map((i) => i.message).join(", ") }, { status: 400 });
     }
     return NextResponse.json({ error: "Failed to create expense" }, { status: 500 });
   }
