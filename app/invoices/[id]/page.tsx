@@ -20,7 +20,19 @@ export default function InvoiceDetailPage() {
     Promise.all([
       fetch("/api/invoices/" + id).then(r => r.json()),
       fetch("/api/settings").then(r => r.json()),
-    ]).then(([inv, s]) => { setInvoice(inv); setSettings(s); setLoading(false); });
+    ]).then(([inv, s]) => {
+      if (inv?.error) {
+        console.error("Invoice API error:", inv.error);
+        setInvoice(null);
+      } else {
+        setInvoice(inv);
+      }
+      setSettings(s?.error ? null : s);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to load invoice:", err);
+      setLoading(false);
+    });
   };
 
   useEffect(() => { fetchData(); }, [id]);
@@ -35,7 +47,13 @@ export default function InvoiceDetailPage() {
   };
 
   if (loading) return <div className="p-8 text-gray-400">Loading...</div>;
-  if (!invoice) return <div className="p-8 text-gray-400">Invoice not found.</div>;
+  if (!invoice) return (
+    <div className="p-8 text-center">
+      <p className="text-gray-500 text-lg font-medium">Invoice not found</p>
+      <p className="text-gray-400 text-sm mt-1">This invoice may have failed to save. Please try converting the quotation again.</p>
+      <a href="/quotations" className="mt-4 inline-block text-blue-600 text-sm underline">← Back to Quotations</a>
+    </div>
+  );
 
   return (
     <div className="space-y-4 w-full">
