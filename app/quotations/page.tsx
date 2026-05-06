@@ -4,12 +4,14 @@ import SearchBar from "@/components/SearchBar";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Quotation } from "@/types";
-import { ArrowRight, Copy, Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Copy, Eye, FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function QuotationsPage() {
   const router = useRouter();
@@ -17,6 +19,8 @@ export default function QuotationsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [convertTarget, setConvertTarget] = useState<Quotation | null>(null);
+  const [converting, setConverting] = useState(false);
 
   const fetchQuotations = useCallback(async () => {
     setLoading(true);
@@ -66,32 +70,50 @@ export default function QuotationsPage() {
     }
   };
 
-  const handleConvertToInvoice = async (q: Quotation) => {
-    if (!confirm("Convert this quotation to an invoice?")) return;
-    const settings = await fetch("/api/settings").then(r => r.json());
-    const res = await fetch("/api/invoices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId: q.customerId,
-        date: new Date().toISOString(),
-        note: settings.defaultInvoiceNote ?? "",
-        status: "Unpaid",
-        quotationId: q.id,
-        items: (q.items ?? []).map(i => ({
-          productId: i.productId,
-          name: i.name,
-          description: i.description,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,
-          discount: i.discount,
-          warranty: i.warranty,
-        })),
-      }),
-    });
-    if (res.ok) {
-      const invoice = await res.json();
-      router.push("/invoices/" + invoice.id);
+  const handleConvertConfirm = async () => {
+    if (!convertTarget) return;
+    setConverting(true);
+    try {
+      const settings = await fetch("/api/settings").then(r => r.json());
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: convertTarget.customerId || null,
+          date: new Date().toISOString(),
+          note: settings.defaultInvoiceNote ?? "",
+          status: "Unpaid",
+          quotationId: convertTarget.id,
+          items: (convertTarget.items ?? []).map(i => ({
+            productId: i.productId || undefined,
+            name: i.name,
+            description: i.description || undefined,
+            category: i.category || "General",
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            discount: i.discount,
+            warranty: i.warranty || undefined,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const invoice = await res.json();
+        toast.success("Invoice created successfully!", {
+          description: `${convertTarget.quotationNumber} → ${invoice.invoiceNumber}`,
+          duration: 4000,
+        });
+        setConvertTarget(null);
+        router.push("/invoices/" + invoice.id);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error("Failed to create invoice", {
+          description: err.error ?? "Please try again.",
+        });
+      }
+    } catch {
+      toast.error("Something went wrong", { description: "Check your connection and try again." });
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -161,7 +183,7 @@ export default function QuotationsPage() {
                         <Button variant="ghost" size="icon" title="Duplicate" onClick={() => handleDuplicate(q.id)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => handleConvertToInvoice(q)}>
+                        <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => setConvertTarget(q)}>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
                         <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDelete(q.id)} className="text-red-400 hover:text-red-600">
@@ -176,6 +198,45 @@ export default function QuotationsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Convert to Invoice confirmation dialog */}
+      <Dialog open={!!convertTarget} onOpenChange={open => { if (!open) setConvertTarget(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-gray-900">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Convert to Invoice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-gray-600">
+              This will create a new invoice from quotation{" "}
+              <span className="font-semibold text-gray-900">{convertTarget?.quotationNumber}</span>.
+            </p>
+            {convertTarget?.customer?.name && (
+              <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-sm text-blue-800">
+                <span className="font-medium">Customer:</span> {convertTarget.customer.name}
+              </div>
+            )}
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-sm text-gray-700 flex justify-between">
+              <span>Total amount</span>
+              <span className="font-semibold">{convertTarget ? formatCurrency(convertTarget.grandTotal) : ""}</span>
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end pt-1">
+            <Button variant="outline" onClick={() => setConvertTarget(null)} disabled={converting}>
+              Cancel
+            </Button>
+            <Button onClick={handleConvertConfirm} disabled={converting} className="gap-2 bg-blue-600 hover:bg-blue-700">
+              {converting ? (
+                <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />Converting...</>
+              ) : (
+                <><ArrowRight className="h-4 w-4" />Create Invoice</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import AppShell from "@/components/layout/AppShell";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,6 +20,7 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className={`${inter.className} min-h-full bg-gray-50`}>
         <AppShell>{children}</AppShell>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );
