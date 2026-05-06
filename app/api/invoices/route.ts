@@ -1,14 +1,14 @@
 import { db, docToJSON, docsToJSON } from "@/lib/firebase";
 import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  serverTimestamp,
+    addDoc,
+    collection,
+    doc,
+    getDoc,
+    getDocs,
+    limit,
+    orderBy,
+    query,
+    serverTimestamp,
 } from "firebase/firestore";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";

@@ -8,18 +8,15 @@ import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
 import type { DebtRecord, Expense, Lead } from "@/types";
 import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  Pencil,
-  Plus,
-  ShoppingBag,
-  Target,
-  Trash2,
-  TrendingDown,
-  TrendingUp,
-  Wallet,
+    CreditCard,
+    Pencil,
+    Plus,
+    ShoppingBag,
+    Target,
+    Trash2,
+    TrendingDown,
+    TrendingUp,
+    Wallet
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
