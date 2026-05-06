@@ -91,14 +91,14 @@ function OverviewTab({ summary }: { summary: Summary | null }) {
         </Card>
       </div>
 
-      {(summary.expenseByPerson.length > 0 || summary.expenseByCategory.length > 0) && (
+      {((summary.expenseByPerson ?? []).length > 0 || summary.expenseByCategory.length > 0) && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {summary.expenseByPerson.length > 0 && (
+          {(summary.expenseByPerson ?? []).length > 0 && (
             <Card>
               <CardHeader><CardTitle className="text-sm">Expenses by Partner</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {summary.expenseByPerson.map(e => (
+                  {(summary.expenseByPerson ?? []).map(e => (
                     <div key={e.person} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">

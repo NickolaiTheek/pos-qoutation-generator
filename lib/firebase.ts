@@ -1,10 +1,10 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
 import {
-  DocumentSnapshot,
-  Firestore,
-  QueryDocumentSnapshot,
-  Timestamp,
-  getFirestore,
+    DocumentSnapshot,
+    Firestore,
+    QueryDocumentSnapshot,
+    Timestamp,
+    getFirestore,
 } from "firebase/firestore/lite";
 
 const firebaseConfig = {
