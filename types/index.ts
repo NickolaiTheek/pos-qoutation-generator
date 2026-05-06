@@ -127,6 +127,7 @@ export interface Expense {
   title: string;
   amount: number;
   category: string;
+  person: "Theekshana" | "Praveen";
   description?: string | null;
   date: string;
   createdAt: string;

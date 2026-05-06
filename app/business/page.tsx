@@ -21,6 +21,8 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 const EXPENSE_CATEGORIES = ["Delivery", "Equipment", "Marketing", "Office", "Travel", "Utilities", "Other"];
+const PERSONS = ["Theekshana", "Praveen"] as const;
+type Person = (typeof PERSONS)[number];
 const LEAD_STATUSES = ["New", "Contacted", "Interested", "Quoted", "Won", "Lost"];
 const DEBT_STATUSES = ["Pending", "Partially Paid", "Paid"];
 
@@ -33,6 +35,7 @@ interface Summary {
   totalDebtPaid: number;
   outstandingDebt: number;
   expenseByCategory: { category: string; total: number }[];
+  expenseByPerson: { person: string; total: number }[];
 }
 
 // ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
@@ -88,23 +91,52 @@ function OverviewTab({ summary }: { summary: Summary | null }) {
         </Card>
       </div>
 
-      {summary.expenseByCategory.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-sm">Expenses by Category</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {summary.expenseByCategory.map(e => (
-                <div key={e.category} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-700">{e.category}</span>
-                  </div>
-                  <span className="text-sm font-semibold text-gray-800">{formatCurrency(e.total)}</span>
+      {(summary.expenseByPerson.length > 0 || summary.expenseByCategory.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {summary.expenseByPerson.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">Expenses by Partner</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {summary.expenseByPerson.map(e => (
+                    <div key={e.person} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                          {e.person.charAt(0)}
+                        </span>
+                        <span className="text-sm font-medium text-gray-700">{e.person}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-semibold text-red-600">{formatCurrency(e.total)}</span>
+                        {summary.totalExpenses > 0 && (
+                          <p className="text-xs text-gray-400">{Math.round((e.total / summary.totalExpenses) * 100)}%</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+          {summary.expenseByCategory.length > 0 && (
+            <Card>
+              <CardHeader><CardTitle className="text-sm">Expenses by Category</CardTitle></CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {summary.expenseByCategory.map(e => (
+                    <div key={e.category} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <ShoppingBag className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-700">{e.category}</span>
+                      </div>
+                      <span className="text-sm font-semibold text-gray-800">{formatCurrency(e.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       <Card>
@@ -140,7 +172,7 @@ function ExpensesTab() {
   const [error, setError] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
-  const [form, setForm] = useState({ title: "", amount: "", category: "Delivery", description: "", date: today });
+  const [form, setForm] = useState({ title: "", amount: "", category: "Delivery", person: "Theekshana" as Person, description: "", date: today });
 
   const fetchExpenses = useCallback(async () => {
     setLoading(true);
@@ -154,14 +186,14 @@ function ExpensesTab() {
 
   const openAdd = () => {
     setEditExpense(null);
-    setForm({ title: "", amount: "", category: "Delivery", description: "", date: today });
+    setForm({ title: "", amount: "", category: "Delivery", person: "Theekshana", description: "", date: today });
     setError("");
     setDialogOpen(true);
   };
 
   const openEdit = (e: Expense) => {
     setEditExpense(e);
-    setForm({ title: e.title, amount: String(e.amount), category: e.category, description: e.description ?? "", date: e.date.split("T")[0] });
+    setForm({ title: e.title, amount: String(e.amount), category: e.category, person: (e.person ?? "Theekshana") as Person, description: e.description ?? "", date: e.date.split("T")[0] });
     setError("");
     setDialogOpen(true);
   };
@@ -171,7 +203,7 @@ function ExpensesTab() {
     if (!form.amount || isNaN(Number(form.amount))) { setError("Valid amount is required."); return; }
     setSaving(true); setError("");
     try {
-      const body = { title: form.title.trim(), amount: parseFloat(form.amount), category: form.category, description: form.description, date: new Date(form.date).toISOString() };
+      const body = { title: form.title.trim(), amount: parseFloat(form.amount), category: form.category, person: form.person, description: form.description, date: new Date(form.date).toISOString() };
       const url = editExpense ? `/api/expenses/${editExpense.id}` : "/api/expenses";
       const method = editExpense ? "PUT" : "POST";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -207,8 +239,9 @@ function ExpensesTab() {
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Person</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Category</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Date</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -220,10 +253,15 @@ function ExpensesTab() {
                       <p className="font-medium text-gray-800">{e.title}</p>
                       {e.description && <p className="text-xs text-gray-400 mt-0.5">{e.description}</p>}
                     </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        e.person === "Theekshana" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                      }`}>{e.person ?? "—"}</span>
+                    </td>
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">
                       <span className="px-2 py-0.5 bg-gray-100 rounded text-xs">{e.category}</span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell text-xs">{new Date(e.date).toLocaleDateString("en-GB")}</td>
+                    <td className="px-4 py-3 text-gray-500 hidden lg:table-cell text-xs">{new Date(e.date).toLocaleDateString("en-GB")}</td>
                     <td className="px-4 py-3 text-right font-semibold text-red-600">{formatCurrency(e.amount)}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end">
@@ -247,6 +285,27 @@ function ExpensesTab() {
             <div className="space-y-1.5">
               <Label>Title *</Label>
               <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Delivery to Galle" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Paid by (Partner) *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {PERSONS.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, person: p }))}
+                    className={`h-10 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      form.person === p
+                        ? p === "Theekshana"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-purple-500 bg-purple-50 text-purple-700"
+                        : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">

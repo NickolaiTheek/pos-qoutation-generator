@@ -24,12 +24,18 @@ export async function GET() {
     const outstandingDebt = totalDebt - totalDebtPaid;
 
     const categoryMap: Record<string, number> = {};
+    const personMap: Record<string, number> = {};
     for (const d of expenseSnap.docs) {
-      const { category, amount } = d.data() as { category: string; amount: number };
+      const { category, amount, person } = d.data() as { category: string; amount: number; person?: string };
       categoryMap[category] = (categoryMap[category] ?? 0) + amount;
+      const p = person ?? "Unknown";
+      personMap[p] = (personMap[p] ?? 0) + amount;
     }
     const expenseByCategory = Object.entries(categoryMap)
       .map(([category, total]) => ({ category, total }))
+      .sort((a, b) => b.total - a.total);
+    const expenseByPerson = Object.entries(personMap)
+      .map(([person, total]) => ({ person, total }))
       .sort((a, b) => b.total - a.total);
 
     return NextResponse.json({
@@ -39,6 +45,7 @@ export async function GET() {
       totalDebtPaid,
       outstandingDebt,
       expenseByCategory,
+      expenseByPerson,
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch business summary" }, { status: 500 });

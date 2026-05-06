@@ -3,10 +3,13 @@ import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/fir
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+const PERSONS = ["Theekshana", "Praveen"] as const;
+
 const expenseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   amount: z.number().min(0),
   category: z.string().min(1),
+  person: z.enum(PERSONS),
   description: z.string().optional(),
   date: z.string(),
 });
@@ -22,6 +25,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       title: data.title,
       amount: data.amount,
       category: data.category,
+      person: data.person,
       description: data.description || null,
       date: new Date(data.date),
       updatedAt: serverTimestamp(),
