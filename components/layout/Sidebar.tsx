@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import {
+    Briefcase,
     FileText,
     LayoutDashboard,
     Package,
@@ -22,6 +23,7 @@ const navItems = [
   { label: "Invoices", href: "/invoices", icon: Receipt },
   { label: "Customers", href: "/customers", icon: Users },
   { label: "Products", href: "/products", icon: Package },
+  { label: "Business", href: "/business", icon: Briefcase },
   { label: "Settings", href: "/settings", icon: Settings },
 ];
 

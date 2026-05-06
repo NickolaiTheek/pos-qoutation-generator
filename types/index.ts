@@ -121,3 +121,40 @@ export interface DashboardStats {
   recentQuotations: Quotation[];
   recentInvoices: Invoice[];
 }
+
+export interface Expense {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  description?: string | null;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  mobile?: string | null;
+  businessName?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DebtRecord {
+  id: string;
+  customerName: string;
+  customerMobile?: string | null;
+  description?: string | null;
+  totalAmount: number;
+  paidAmount: number;
+  dueDate?: string | null;
+  status: string;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
