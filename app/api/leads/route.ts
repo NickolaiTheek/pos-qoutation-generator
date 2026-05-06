@@ -8,6 +8,7 @@ const leadSchema = z.object({
   mobile: z.string().optional(),
   businessName: z.string().optional(),
   address: z.string().optional(),
+  quotationAmount: z.number().min(0).optional().nullable(),
   notes: z.string().optional(),
   status: z.string().optional(),
 });
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
       mobile: data.mobile || null,
       businessName: data.businessName || null,
       address: data.address || null,
+      quotationAmount: data.quotationAmount ?? null,
       notes: data.notes || null,
       status: data.status || "New",
       createdAt: serverTimestamp(),

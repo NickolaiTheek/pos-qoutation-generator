@@ -140,6 +140,7 @@ export interface Lead {
   mobile?: string | null;
   businessName?: string | null;
   address?: string | null;
+  quotationAmount?: number | null;
   notes?: string | null;
   status: string;
   createdAt: string;

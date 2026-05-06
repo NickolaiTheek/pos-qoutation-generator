@@ -357,7 +357,7 @@ function LeadsTab() {
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  const [form, setForm] = useState({ name: "", mobile: "", businessName: "", address: "", notes: "", status: "New" });
+  const [form, setForm] = useState({ name: "", mobile: "", businessName: "", address: "", quotationAmount: "", notes: "", status: "New" });
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
@@ -373,14 +373,14 @@ function LeadsTab() {
 
   const openAdd = () => {
     setEditLead(null);
-    setForm({ name: "", mobile: "", businessName: "", address: "", notes: "", status: "New" });
+    setForm({ name: "", mobile: "", businessName: "", address: "", quotationAmount: "", notes: "", status: "New" });
     setError("");
     setDialogOpen(true);
   };
 
   const openEdit = (l: Lead) => {
     setEditLead(l);
-    setForm({ name: l.name, mobile: l.mobile ?? "", businessName: l.businessName ?? "", address: l.address ?? "", notes: l.notes ?? "", status: l.status });
+    setForm({ name: l.name, mobile: l.mobile ?? "", businessName: l.businessName ?? "", address: l.address ?? "", quotationAmount: l.quotationAmount != null ? String(l.quotationAmount) : "", notes: l.notes ?? "", status: l.status });
     setError("");
     setDialogOpen(true);
   };
@@ -389,7 +389,7 @@ function LeadsTab() {
     if (!form.name.trim()) { setError("Name is required."); return; }
     setSaving(true); setError("");
     try {
-      const body = { name: form.name.trim(), mobile: form.mobile, businessName: form.businessName, address: form.address, notes: form.notes, status: form.status };
+      const body = { name: form.name.trim(), mobile: form.mobile, businessName: form.businessName, address: form.address, quotationAmount: form.quotationAmount ? parseFloat(form.quotationAmount) : null, notes: form.notes, status: form.status };
       const url = editLead ? `/api/leads/${editLead.id}` : "/api/leads";
       const method = editLead ? "PUT" : "POST";
       const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -431,6 +431,7 @@ function LeadsTab() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Business</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Mobile</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Quoted</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-4 py-3" />
                 </tr>
@@ -444,6 +445,9 @@ function LeadsTab() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{l.businessName ?? "—"}</td>
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{l.mobile ?? "—"}</td>
+                    <td className="px-4 py-3 text-right hidden lg:table-cell">
+                      {l.quotationAmount != null ? <span className="font-medium text-blue-600">{formatCurrency(l.quotationAmount)}</span> : <span className="text-gray-300">—</span>}
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${LEAD_STATUS_COLORS[l.status] ?? "bg-gray-100 text-gray-700"}`}>{l.status}</span>
                     </td>
@@ -489,6 +493,10 @@ function LeadsTab() {
             <div className="space-y-1.5">
               <Label>Address</Label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Location / area" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Quotation Amount (LKR)</Label>
+              <Input type="number" min="0" step="0.01" value={form.quotationAmount} onChange={e => setForm(f => ({ ...f, quotationAmount: e.target.value }))} placeholder="0.00" />
             </div>
             <div className="space-y-1.5">
               <Label>Notes</Label>
