@@ -1,5 +1,5 @@
 import { db, docToJSON } from "@/lib/firebase";
-import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc, serverTimestamp, updateDoc } from "firebase/firestore/lite";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 

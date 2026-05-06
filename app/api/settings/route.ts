@@ -1,5 +1,5 @@
 import { db, docToJSON } from "@/lib/firebase";
-import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc } from "firebase/firestore/lite";
 import { NextRequest, NextResponse } from "next/server";
 
 const SETTINGS_ID = "app";

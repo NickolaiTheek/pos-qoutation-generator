@@ -1,5 +1,11 @@
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { DocumentSnapshot, QueryDocumentSnapshot, Timestamp, getFirestore } from "firebase/firestore";
+import {
+  DocumentSnapshot,
+  Firestore,
+  QueryDocumentSnapshot,
+  Timestamp,
+  getFirestore,
+} from "firebase/firestore/lite";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAEE1rIQVJ25WjHp5zgAQb6sIIKYyYNR9g",
@@ -12,7 +18,11 @@ const firebaseConfig = {
 };
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// firebase/firestore/lite uses plain HTTP (no gRPC, no WebSocket).
+// This works correctly in Node.js (Next.js API routes) without transport errors.
+const globalForFirebase = globalThis as unknown as { _db: Firestore | undefined };
+export const db = globalForFirebase._db ?? (globalForFirebase._db = getFirestore(app));
 
 function serializeValue(value: unknown): unknown {
   if (value instanceof Timestamp) return value.toDate().toISOString();

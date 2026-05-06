@@ -9,7 +9,7 @@ import {
     orderBy,
     query,
     serverTimestamp,
-} from "firebase/firestore";
+} from "firebase/firestore/lite";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
