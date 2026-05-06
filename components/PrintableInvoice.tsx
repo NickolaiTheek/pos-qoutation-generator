@@ -105,39 +105,56 @@ export default function PrintableInvoice({
       {/* ── NAVY HEADER BANNER ────────────────────────────── */}
       <div style={p({
         background: NAVY,
-        padding: "18px 20mm 16px 20mm",
+        padding: "18px 20mm",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
+        gap: "16px",
       })}>
-        {/* Left: Logo + Company */}
-        <div>
-          <img
-            src="/logo-bw.png"
-            alt={businessName}
-            style={p({ width: "90px", marginBottom: "8px", display: "block", filter: "brightness(0) invert(1)" })}
-          />
-          <p style={p({ color: "#e2e8f0", fontSize: "11px", margin: "0 0 2px 0", fontWeight: 700 })}>{businessName}</p>
-          {businessPhone && (
-            <p style={p({ color: "#94a3b8", fontSize: "10px", margin: "0 0 1px 0" })}>T: {businessPhone}</p>
-          )}
-          {(businessEmail || businessWeb) && (
-            <p style={p({ color: "#94a3b8", fontSize: "10px", margin: 0 })}>
-              {businessEmail && `E: ${businessEmail}`}
-              {businessEmail && businessWeb && "  |  "}
-              {businessWeb && `W: ${businessWeb}`}
-            </p>
-          )}
+        {/* Left: Logo card + contact info */}
+        <div style={p({ display: "flex", alignItems: "center", gap: "14px" })}>
+          {/* White logo card */}
+          <div style={p({
+            background: "#ffffff",
+            borderRadius: "10px",
+            padding: "6px",
+            width: "90px",
+            height: "90px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          })}>
+            <img
+              src="/logo.png"
+              alt={businessName}
+              style={p({ width: "78px", height: "78px", objectFit: "contain", display: "block" })}
+            />
+          </div>
+          {/* Contact info */}
+          <div>
+            <p style={p({ color: "#ffffff", fontSize: "13px", margin: "0 0 4px 0", fontWeight: 700, letterSpacing: "0.3px" })}>{businessName}</p>
+            {businessPhone && (
+              <p style={p({ color: "#94a3b8", fontSize: "10px", margin: "0 0 2px 0" })}>T: {businessPhone}</p>
+            )}
+            {businessEmail && (
+              <p style={p({ color: "#94a3b8", fontSize: "10px", margin: "0 0 2px 0" })}>E: {businessEmail}</p>
+            )}
+            {businessWeb && (
+              <p style={p({ color: "#94a3b8", fontSize: "10px", margin: 0 })}>W: {businessWeb}</p>
+            )}
+          </div>
         </div>
 
         {/* Right: INVOICE title */}
-        <div style={p({ textAlign: "right" })}>
+        <div style={p({ textAlign: "right", flexShrink: 0 })}>
           <h1 style={p({
-            color: "#fff",
-            fontSize: "42px",
+            color: "#ffffff",
+            fontSize: "44px",
             fontWeight: 900,
-            margin: "0 0 4px 0",
-            letterSpacing: "3px",
+            margin: "0 0 6px 0",
+            letterSpacing: "4px",
             textTransform: "uppercase",
             lineHeight: 1,
           })}>INVOICE</h1>
@@ -152,20 +169,21 @@ export default function PrintableInvoice({
       <div style={p({
         display: "flex",
         justifyContent: "space-between",
-        padding: "16px 20mm 12px 20mm",
-        gap: "20px",
+        alignItems: "flex-start",
+        padding: "18px 20mm 16px 20mm",
+        gap: "24px",
         background: "#f8fafc",
         borderBottom: "1px solid #e2e8f0",
       })}>
         {/* Bill To */}
-        <div style={p({ flex: "0 0 50%" })}>
+        <div style={p({ flex: "1 1 0", minWidth: 0 })}>
           <p style={p({
             fontSize: "9px",
             fontWeight: 700,
             letterSpacing: "1.5px",
             textTransform: "uppercase",
             color: ACCENT,
-            margin: "0 0 6px 0",
+            margin: "0 0 7px 0",
             borderBottom: "2px solid " + ACCENT,
             paddingBottom: "3px",
             display: "inline-block",
@@ -189,12 +207,12 @@ export default function PrintableInvoice({
 
         {/* Invoice Meta */}
         <div style={p({
-          flex: "0 0 42%",
+          flex: "0 0 220px",
           background: "#fff",
           border: "1px solid #e2e8f0",
           borderRadius: "8px",
           padding: "12px 14px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.07)",
         })}>
           <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "11px" })}>
             <tbody>
@@ -237,10 +255,10 @@ export default function PrintableInvoice({
               <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "11px" })}>
                 <thead>
                   <tr style={p({ background: NAVY })}>
-                    <th style={p({ padding: "8px 10px", textAlign: "left", color: "#fff", fontWeight: 700, fontSize: "11px", width: "58%", borderRadius: "0" })}>{cat}</th>
-                    <th style={p({ padding: "8px 10px", textAlign: "center", color: "#cbd5e1", fontWeight: 600, fontSize: "10.5px", width: "8%" })}>Qty</th>
-                    <th style={p({ padding: "8px 10px", textAlign: "right", color: "#cbd5e1", fontWeight: 600, fontSize: "10.5px", width: "17%" })}>Unit Price</th>
-                    <th style={p({ padding: "8px 10px", textAlign: "right", color: "#fff", fontWeight: 700, fontSize: "10.5px", width: "17%" })}>Total</th>
+                    <th style={p({ padding: "9px 10px", textAlign: "left", color: "#fff", fontWeight: 700, fontSize: "11px", width: "55%" })}>{cat}</th>
+                    <th style={p({ padding: "9px 10px", textAlign: "center", color: "#cbd5e1", fontWeight: 600, fontSize: "10.5px", width: "10%" })}>Qty</th>
+                    <th style={p({ padding: "9px 10px", textAlign: "right", color: "#cbd5e1", fontWeight: 600, fontSize: "10.5px", width: "18%" })}>Unit Price</th>
+                    <th style={p({ padding: "9px 10px", textAlign: "right", color: "#fff", fontWeight: 700, fontSize: "10.5px", width: "17%" })}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
