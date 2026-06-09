@@ -175,25 +175,49 @@ export default function PrintableInvoice({
         )}
 
         {/* ── HEADER ── */}
-        <div style={p({ background: BLACK, padding: "14px 18mm", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" })}>
-          <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
-            <div style={p({ background: "#fff", borderRadius: "8px", padding: "5px", width: "72px", height: "72px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.4)" })}>
-              <img src={logo} alt={businessName} style={p({ width: "62px", height: "62px", objectFit: "contain" })} />
+        <div style={p({ background: BLACK, padding: "0", overflow: "hidden", position: "relative" })}>
+          {/* Subtle background grid texture */}
+          <div style={p({ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px)", pointerEvents: "none" })} />
+
+          <div style={p({ display: "flex", alignItems: "stretch", position: "relative", zIndex: 1 })}>
+            {/* Left section — logo + company */}
+            <div style={p({ display: "flex", alignItems: "center", gap: "14px", padding: "18px 20px 18px 18mm", flex: "1 1 0" })}>
+              {/* Logo card */}
+              <div style={p({ background: "#ffffff", borderRadius: "10px", padding: "6px", width: "80px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.5)" })}>
+                <img src={logo} alt={businessName} style={p({ width: "68px", height: "68px", objectFit: "contain" })} />
+              </div>
+              {/* Company details */}
+              <div>
+                <p style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 900, margin: "0 0 1px 0", letterSpacing: "0.6px", textTransform: "uppercase" })}>{businessName}</p>
+                <div style={p({ width: "32px", height: "1.5px", background: "#444", margin: "5px 0 6px 0" })} />
+                {businessPhone && (
+                  <p style={p({ color: "#999", fontSize: "9.5px", margin: "0 0 2px 0", letterSpacing: "0.2px" })}>
+                    T: {businessPhone}
+                  </p>
+                )}
+                {businessEmail && (
+                  <p style={p({ color: "#999", fontSize: "9.5px", margin: 0, letterSpacing: "0.2px" })}>
+                    E: {businessEmail}
+                  </p>
+                )}
+              </div>
             </div>
-            <div>
-              <p style={p({ color: "#fff", fontSize: "13px", fontWeight: 800, margin: "0 0 3px 0" })}>{businessName}</p>
-              {businessPhone && <p style={p({ color: "#aaa", fontSize: "9px", margin: "0 0 2px 0" })}>T: {businessPhone}</p>}
-              {businessEmail && <p style={p({ color: "#aaa", fontSize: "9px", margin: 0 })}>E: {businessEmail}</p>}
+
+            {/* Vertical separator */}
+            <div style={p({ width: "1px", background: "rgba(255,255,255,0.08)", margin: "14px 0", flexShrink: 0 })} />
+
+            {/* Right section — INVOICE */}
+            <div style={p({ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", padding: "18px 18mm 18px 28px", flexShrink: 0, minWidth: "210px" })}>
+              <div style={p({ width: "100%", borderTop: "1px solid rgba(255,255,255,0.12)", borderBottom: "1px solid rgba(255,255,255,0.12)", padding: "6px 0", marginBottom: "8px", textAlign: "right" })}>
+                <h1 style={p({ color: "#ffffff", fontSize: "46px", fontWeight: 900, margin: 0, letterSpacing: "9px", lineHeight: 1, textTransform: "uppercase" })}>INVOICE</h1>
+              </div>
+              <p style={p({ color: "#666", fontSize: "10px", margin: 0, letterSpacing: "0.8px", textAlign: "right" })}>{invoice.invoiceNumber ?? "—"}</p>
             </div>
-          </div>
-          <div style={p({ textAlign: "right" })}>
-            <h1 style={p({ color: "#fff", fontSize: "42px", fontWeight: 900, margin: "0 0 4px 0", letterSpacing: "6px", lineHeight: 1 })}>INVOICE</h1>
-            <p style={p({ color: "#999", fontSize: "10px", margin: 0, letterSpacing: "0.5px" })}>{invoice.invoiceNumber ?? "—"}</p>
           </div>
         </div>
 
         {/* ── ACCENT LINE ── */}
-        <div style={p({ height: "3px", background: `linear-gradient(90deg, ${BLACK} 0%, #555 50%, ${BLACK} 100%)` })} />
+        <div style={p({ height: "3px", background: "linear-gradient(90deg, #111 0%, #444 40%, #222 100%)" })} />
 
         {/* ── BILL TO + META ── */}
         <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 18mm 11px 18mm", gap: "18px", background: BG, borderBottom: `1px solid ${BORDER}`, position: "relative", zIndex: 1 })}>
@@ -335,19 +359,26 @@ export default function PrintableInvoice({
       <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", pageBreakBefore: "always" })}>
 
         {/* ── WARRANTY HEADER ── */}
-        <div style={p({ background: BLACK, padding: "10px 18mm", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
-          <div style={p({ display: "flex", alignItems: "center", gap: "10px" })}>
-            <div style={p({ background: "#fff", borderRadius: "6px", padding: "4px", width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center" })}>
-              <img src={logo} alt={businessName} style={p({ width: "42px", height: "42px", objectFit: "contain" })} />
+        <div style={p({ background: BLACK, padding: "0", overflow: "hidden", position: "relative" })}>
+          <div style={p({ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px)", pointerEvents: "none" })} />
+          <div style={p({ display: "flex", alignItems: "stretch", position: "relative", zIndex: 1 })}>
+            <div style={p({ display: "flex", alignItems: "center", gap: "12px", padding: "12px 20px 12px 18mm", flex: "1 1 0" })}>
+              <div style={p({ background: "#fff", borderRadius: "8px", padding: "5px", width: "56px", height: "56px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 3px 10px rgba(0,0,0,0.5)" })}>
+                <img src={logo} alt={businessName} style={p({ width: "46px", height: "46px", objectFit: "contain" })} />
+              </div>
+              <div>
+                <p style={p({ color: "#fff", fontSize: "12px", fontWeight: 900, margin: "0 0 1px 0", letterSpacing: "0.5px", textTransform: "uppercase" })}>{businessName}</p>
+                <div style={p({ width: "28px", height: "1.5px", background: "#444", margin: "4px 0" })} />
+                {businessPhone && <p style={p({ color: "#999", fontSize: "8.5px", margin: 0 })}>T: {businessPhone}</p>}
+              </div>
             </div>
-            <div>
-              <p style={p({ color: "#fff", fontSize: "11px", fontWeight: 800, margin: "0 0 1px 0" })}>{businessName}</p>
-              {businessPhone && <p style={p({ color: "#aaa", fontSize: "8.5px", margin: 0 })}>T: {businessPhone}</p>}
+            <div style={p({ width: "1px", background: "rgba(255,255,255,0.08)", margin: "10px 0", flexShrink: 0 })} />
+            <div style={p({ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", padding: "12px 18mm 12px 24px", flexShrink: 0 })}>
+              <div style={p({ borderTop: "1px solid rgba(255,255,255,0.12)", borderBottom: "1px solid rgba(255,255,255,0.12)", padding: "4px 0", marginBottom: "5px", textAlign: "right" })}>
+                <p style={p({ color: "#fff", fontSize: "20px", fontWeight: 900, letterSpacing: "5px", margin: 0 })}>WARRANTY</p>
+              </div>
+              <p style={p({ color: "#666", fontSize: "8.5px", margin: 0, letterSpacing: "1.5px", textAlign: "right" })}>CONDITIONS</p>
             </div>
-          </div>
-          <div style={p({ textAlign: "right" })}>
-            <p style={p({ color: "#fff", fontSize: "17px", fontWeight: 900, letterSpacing: "3px", margin: "0 0 1px 0" })}>WARRANTY</p>
-            <p style={p({ color: "#999", fontSize: "8.5px", margin: 0, letterSpacing: "0.5px" })}>CONDITIONS</p>
           </div>
         </div>
 
