@@ -56,60 +56,30 @@ export default function PrintableQuotation({
       })}
     >
 
-      {/* 3-COLUMN HEADER */}
-      <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start" })}>
-
-        {/* LEFT: logo + company contact */}
-        <div style={p({ flex: "0 0 38%" })}>
-          <img src="/logo-bw.png" alt="Zero Pos" style={p({ width: "100px", marginBottom: "8px", marginTop: "-8px", display: "block" })} />
-          <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 3px 0" })}>{businessName}</p>
-          {businessPhone && (
-            <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 2px 0" })}>T: {businessPhone}</p>
-          )}
-          {(businessEmail || businessWeb) && (
-            <p style={p({ fontSize: "10px", color: "#333", margin: 0 })}>
-              {businessEmail && `E: ${businessEmail}`}
-              {businessEmail && businessWeb && " | "}
-              {businessWeb && `W: ${businessWeb}`}
-            </p>
-          )}
-        </div>
-
-        {/* CENTER: title */}
-        <div style={p({ flex: "0 0 26%", textAlign: "center", paddingTop: "28px" })}>
-          <h1 style={p({ fontWeight: 700, fontSize: "26px", margin: 0, letterSpacing: "0.5px" })}>
-            Quotation
-          </h1>
-        </div>
-
-        {/* RIGHT: date/quote# then TO: customer */}
-        <div style={p({ flex: "0 0 30%", textAlign: "right" })}>
-          {/* Date & Quote No */}
-          <div style={p({ lineHeight: 1.8, fontSize: "11px", marginBottom: "10px" })}>
-            <span style={p({ fontWeight: 700 })}>DATE:&nbsp;&nbsp;</span>{formatDate(quotation.date)}<br />
-            <span style={p({ fontWeight: 700 })}>Quote No:&nbsp;&nbsp;</span>#{quotation.quotationNumber}
+      {/* Modern header: logo + company on left, quotation meta card on right */}
+      <div style={p({ background: "#f8fafc", padding: "10px 14mm", borderRadius: "8px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
+        <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
+          <div style={p({ width: "72px", height: "72px", borderRadius: "10px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 14px rgba(15,23,42,0.06)" })}>
+            <img src="/logo-bw.png" alt={businessName} style={p({ width: "60px", height: "60px", objectFit: "contain" })} />
           </div>
-          {/* TO: */}
-          <p style={p({ fontWeight: 700, fontSize: "11px", margin: "0 0 3px 0" })}>TO:</p>
-          <p style={p({ fontWeight: 700, fontSize: "12px", margin: "0 0 2px 0" })}>{quotation.customer?.name ?? ""}</p>
-          {quotation.customer?.businessName && (
-            <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 1px 0" })}>{quotation.customer.businessName}</p>
-          )}
-          {quotation.customer?.mobile && (
-            <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 1px 0" })}>T: {quotation.customer.mobile}</p>
-          )}
-          {quotation.customer?.email && (
-            <p style={p({ fontSize: "10px", color: "#333", margin: "0 0 1px 0" })}>{quotation.customer.email}</p>
-          )}
-          {quotation.customer?.address && (
-            <p style={p({ fontSize: "10px", color: "#555", margin: 0 })}>{quotation.customer.address}</p>
-          )}
+          <div>
+            <div style={p({ fontWeight: 800, fontSize: "16px", color: "#0f172a" })}>{businessName}</div>
+            <div style={p({ fontSize: "12px", color: "#374151" })}>
+              {businessPhone && <span>T: {businessPhone}</span>}
+              {businessPhone && businessEmail && <span style={p({ margin: "0 6px" })}>•</span>}
+              {businessEmail && <span>E: {businessEmail}</span>}
+            </div>
+          </div>
         </div>
 
+        <div style={p({ minWidth: "220px", textAlign: "right" })}>
+          <div style={p({ background: "#fff", padding: "10px 12px", borderRadius: "8px", boxShadow: "0 6px 14px rgba(15,23,42,0.06)", display: "inline-block" })}>
+            <div style={p({ fontSize: "10px", fontWeight: 700, color: "#6b7280" })}>QUOTATION</div>
+            <div style={p({ fontSize: "15px", fontWeight: 900, marginTop: "4px" })}>#{quotation.quotationNumber}</div>
+            <div style={p({ fontSize: "12px", color: "#374151", marginTop: "6px" })}>{formatDate(quotation.date)}</div>
+          </div>
+        </div>
       </div>
-
-      {/* DIVIDER */}
-      <div style={p({ borderTop: "1.5px solid #111", margin: "10px 0" })} />
 
       {/* CATEGORY SECTIONS */}
       {categoryOrder.map((cat) => {

@@ -174,50 +174,37 @@ export default function PrintableInvoice({
           <div style={p({ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%,-50%) rotate(-28deg)", fontSize: "90px", fontWeight: 900, color: "#000", opacity: 0.035, letterSpacing: "8px", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap", zIndex: 0 })}>PAID</div>
         )}
 
-        {/* ── HEADER ── */}
-        <div style={p({ background: BLACK, padding: "0", overflow: "hidden", position: "relative" })}>
-          {/* Subtle background grid texture */}
-          <div style={p({ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px)", pointerEvents: "none" })} />
-
-          <div style={p({ display: "flex", alignItems: "stretch", position: "relative", zIndex: 1 })}>
-            {/* Left section — logo + company */}
-            <div style={p({ display: "flex", alignItems: "center", gap: "14px", padding: "18px 20px 18px 18mm", flex: "1 1 0" })}>
-              {/* Logo card */}
-              <div style={p({ background: "#ffffff", borderRadius: "10px", padding: "6px", width: "80px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.5)" })}>
-                <img src={logo} alt={businessName} style={p({ width: "68px", height: "68px", objectFit: "contain" })} />
+        {/* ── HEADER ── modern clean header: logo + company on left, invoice meta card on right */}
+        <div style={p({ background: "linear-gradient(90deg, #0f172a, #111827)", padding: "14px 18mm", overflow: "hidden", position: "relative" })}>
+          <div style={p({ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", position: "relative", zIndex: 1 })}>
+            <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
+              <div style={p({ width: "78px", height: "78px", borderRadius: "12px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 18px rgba(2,6,23,0.45)" })}>
+                <img src={logo} alt={businessName} style={p({ width: "66px", height: "66px", objectFit: "contain" })} />
               </div>
-              {/* Company details */}
               <div>
-                <p style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 900, margin: "0 0 1px 0", letterSpacing: "0.6px", textTransform: "uppercase" })}>{businessName}</p>
-                <div style={p({ width: "32px", height: "1.5px", background: "#444", margin: "5px 0 6px 0" })} />
-                {businessPhone && (
-                  <p style={p({ color: "#999", fontSize: "9.5px", margin: "0 0 2px 0", letterSpacing: "0.2px" })}>
-                    T: {businessPhone}
-                  </p>
-                )}
-                {businessEmail && (
-                  <p style={p({ color: "#999", fontSize: "9.5px", margin: 0, letterSpacing: "0.2px" })}>
-                    E: {businessEmail}
-                  </p>
-                )}
+                <div style={p({ color: "#fff", fontSize: "18px", fontWeight: 800, marginBottom: "2px" })}>{businessName}</div>
+                <div style={p({ color: "rgba(255,255,255,0.75)", fontSize: "12px" })}>
+                  {businessPhone && <span>T: {businessPhone}</span>}
+                  {businessPhone && businessEmail && <span style={p({ margin: "0 6px" })}>•</span>}
+                  {businessEmail && <span>E: {businessEmail}</span>}
+                </div>
               </div>
             </div>
 
-            {/* Vertical separator */}
-            <div style={p({ width: "1px", background: "rgba(255,255,255,0.08)", margin: "14px 0", flexShrink: 0 })} />
-
-            {/* Right section — INVOICE */}
-            <div style={p({ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", padding: "18px 18mm 18px 28px", flexShrink: 0, minWidth: "210px" })}>
-              <div style={p({ width: "100%", borderTop: "1px solid rgba(255,255,255,0.12)", borderBottom: "1px solid rgba(255,255,255,0.12)", padding: "6px 0", marginBottom: "8px", textAlign: "right" })}>
-                <h1 style={p({ color: "#ffffff", fontSize: "46px", fontWeight: 900, margin: 0, letterSpacing: "9px", lineHeight: 1, textTransform: "uppercase" })}>INVOICE</h1>
+            <div style={p({ minWidth: "220px" })}>
+              <div style={p({ background: "#ffffff", color: "#0f172a", borderRadius: "10px", padding: "10px 12px", boxShadow: "0 6px 18px rgba(2,6,23,0.25)", textAlign: "right" })}>
+                <div style={p({ fontSize: "10px", color: "#6b7280", fontWeight: 700, letterSpacing: "0.6px" })}>INVOICE</div>
+                <div style={p({ fontSize: "16px", fontWeight: 900, marginTop: "4px" })}>{invoice.invoiceNumber ?? "—"}</div>
+                <div style={p({ fontSize: "12px", color: "#374151", marginTop: "6px" })}>{formatDate(invoice.date)}</div>
+                <div style={p({ marginTop: "8px" })}>
+                  <span style={p({ display: "inline-block", padding: "4px 8px", borderRadius: "999px", background: isPaid ? "#d1fae5" : "#fff7ed", color: isPaid ? "#065f46" : "#92400e", fontWeight: 700, fontSize: "11px" })}>{invoice.status}</span>
+                </div>
               </div>
-              <p style={p({ color: "#666", fontSize: "10px", margin: 0, letterSpacing: "0.8px", textAlign: "right" })}>{invoice.invoiceNumber ?? "—"}</p>
             </div>
           </div>
+          {/* subtle bottom accent */}
+          <div style={p({ height: "6px", background: "linear-gradient(90deg, rgba(14,165,233,0.9), rgba(59,130,246,0.9))", borderRadius: "6px", marginTop: "12px", width: "100%" })} />
         </div>
-
-        {/* ── ACCENT LINE ── */}
-        <div style={p({ height: "3px", background: "linear-gradient(90deg, #111 0%, #444 40%, #222 100%)" })} />
 
         {/* ── BILL TO + META ── */}
         <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 18mm 11px 18mm", gap: "18px", background: BG, borderBottom: `1px solid ${BORDER}`, position: "relative", zIndex: 1 })}>
