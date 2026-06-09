@@ -159,6 +159,27 @@ export default function PrintableInvoice({
 
   const logo = businessLogoUrl || "/logo-bw.png";
 
+  const Header = () => (
+    <div style={p({ background: BLACK, padding: "12px 18mm", overflow: "hidden" })}>
+      <div style={p({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
+        <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
+          <div style={p({ width: "72px", height: "72px", borderRadius: "10px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" })}>
+            <img src={logo} alt={businessName} style={p({ width: "60px", height: "60px", objectFit: "contain" })} />
+          </div>
+          <div>
+            <div style={p({ color: "#fff", fontSize: "16px", fontWeight: 800 })}>{businessName}</div>
+            <div style={p({ color: "#fff", fontSize: "11px", marginTop: "4px" })}>
+              {businessPhone && <span>T: {businessPhone}</span>}
+              {businessPhone && businessEmail && <span style={p({ margin: "0 6px" })}>•</span>}
+              {businessEmail && <span>E: {businessEmail}</span>}
+            </div>
+          </div>
+        </div>
+        <div style={p({ minWidth: "120px" })} />
+      </div>
+    </div>
+  );
+
   return (
     <div
       id="printable-invoice"
@@ -174,37 +195,7 @@ export default function PrintableInvoice({
           <div style={p({ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%,-50%) rotate(-28deg)", fontSize: "90px", fontWeight: 900, color: "#000", opacity: 0.035, letterSpacing: "8px", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap", zIndex: 0 })}>PAID</div>
         )}
 
-        {/* ── HEADER ── modern clean header: logo + company on left, invoice meta card on right */}
-        <div style={p({ background: "linear-gradient(90deg, #0f172a, #111827)", padding: "14px 18mm", overflow: "hidden", position: "relative" })}>
-          <div style={p({ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", position: "relative", zIndex: 1 })}>
-            <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
-              <div style={p({ width: "78px", height: "78px", borderRadius: "12px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 18px rgba(2,6,23,0.45)" })}>
-                <img src={logo} alt={businessName} style={p({ width: "66px", height: "66px", objectFit: "contain" })} />
-              </div>
-              <div>
-                <div style={p({ color: "#fff", fontSize: "18px", fontWeight: 800, marginBottom: "2px" })}>{businessName}</div>
-                <div style={p({ color: "rgba(255,255,255,0.75)", fontSize: "12px" })}>
-                  {businessPhone && <span>T: {businessPhone}</span>}
-                  {businessPhone && businessEmail && <span style={p({ margin: "0 6px" })}>•</span>}
-                  {businessEmail && <span>E: {businessEmail}</span>}
-                </div>
-              </div>
-            </div>
-
-            <div style={p({ minWidth: "220px" })}>
-              <div style={p({ background: "#ffffff", color: "#0f172a", borderRadius: "10px", padding: "10px 12px", boxShadow: "0 6px 18px rgba(2,6,23,0.25)", textAlign: "right" })}>
-                <div style={p({ fontSize: "10px", color: "#6b7280", fontWeight: 700, letterSpacing: "0.6px" })}>INVOICE</div>
-                <div style={p({ fontSize: "16px", fontWeight: 900, marginTop: "4px" })}>{invoice.invoiceNumber ?? "—"}</div>
-                <div style={p({ fontSize: "12px", color: "#374151", marginTop: "6px" })}>{formatDate(invoice.date)}</div>
-                <div style={p({ marginTop: "8px" })}>
-                  <span style={p({ display: "inline-block", padding: "4px 8px", borderRadius: "999px", background: isPaid ? "#d1fae5" : "#fff7ed", color: isPaid ? "#065f46" : "#92400e", fontWeight: 700, fontSize: "11px" })}>{invoice.status}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* subtle bottom accent */}
-          <div style={p({ height: "6px", background: "linear-gradient(90deg, rgba(14,165,233,0.9), rgba(59,130,246,0.9))", borderRadius: "6px", marginTop: "12px", width: "100%" })} />
-        </div>
+        <Header />
 
         {/* ── BILL TO + META ── */}
         <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 18mm 11px 18mm", gap: "18px", background: BG, borderBottom: `1px solid ${BORDER}`, position: "relative", zIndex: 1 })}>
@@ -345,29 +336,7 @@ export default function PrintableInvoice({
       {/* ══════════════════════════════════════════════════ */}
       <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", pageBreakBefore: "always" })}>
 
-        {/* ── WARRANTY HEADER ── */}
-        <div style={p({ background: BLACK, padding: "0", overflow: "hidden", position: "relative" })}>
-          <div style={p({ position: "absolute", inset: 0, backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px),repeating-linear-gradient(90deg,transparent,transparent 28px,rgba(255,255,255,0.018) 28px,rgba(255,255,255,0.018) 29px)", pointerEvents: "none" })} />
-          <div style={p({ display: "flex", alignItems: "stretch", position: "relative", zIndex: 1 })}>
-            <div style={p({ display: "flex", alignItems: "center", gap: "12px", padding: "12px 20px 12px 18mm", flex: "1 1 0" })}>
-              <div style={p({ background: "#fff", borderRadius: "8px", padding: "5px", width: "56px", height: "56px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.1), 0 3px 10px rgba(0,0,0,0.5)" })}>
-                <img src={logo} alt={businessName} style={p({ width: "46px", height: "46px", objectFit: "contain" })} />
-              </div>
-              <div>
-                <p style={p({ color: "#fff", fontSize: "12px", fontWeight: 900, margin: "0 0 1px 0", letterSpacing: "0.5px", textTransform: "uppercase" })}>{businessName}</p>
-                <div style={p({ width: "28px", height: "1.5px", background: "#444", margin: "4px 0" })} />
-                {businessPhone && <p style={p({ color: "#999", fontSize: "8.5px", margin: 0 })}>T: {businessPhone}</p>}
-              </div>
-            </div>
-            <div style={p({ width: "1px", background: "rgba(255,255,255,0.08)", margin: "10px 0", flexShrink: 0 })} />
-            <div style={p({ display: "flex", flexDirection: "column", alignItems: "flex-end", justifyContent: "center", padding: "12px 18mm 12px 24px", flexShrink: 0 })}>
-              <div style={p({ borderTop: "1px solid rgba(255,255,255,0.12)", borderBottom: "1px solid rgba(255,255,255,0.12)", padding: "4px 0", marginBottom: "5px", textAlign: "right" })}>
-                <p style={p({ color: "#fff", fontSize: "20px", fontWeight: 900, letterSpacing: "5px", margin: 0 })}>WARRANTY</p>
-              </div>
-              <p style={p({ color: "#666", fontSize: "8.5px", margin: 0, letterSpacing: "1.5px", textAlign: "right" })}>CONDITIONS</p>
-            </div>
-          </div>
-        </div>
+        <Header />
 
         {/* ── INVOICE REF BAR ── */}
         <div style={p({ background: BG, borderBottom: `1px solid ${BORDER}`, padding: "5px 18mm", display: "flex", gap: "20px" })}>

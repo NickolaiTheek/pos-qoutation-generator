@@ -56,27 +56,19 @@ export default function PrintableQuotation({
       })}
     >
 
-      {/* Modern header: logo + company on left, quotation meta card on right */}
-      <div style={p({ background: "#f8fafc", padding: "10px 14mm", borderRadius: "8px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
+      {/* Black & white header (logo + company) with no meta card */}
+      <div style={p({ background: "#0a0a0a", padding: "12px 14mm", marginBottom: "8px" })}>
         <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
-          <div style={p({ width: "72px", height: "72px", borderRadius: "10px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 6px 14px rgba(15,23,42,0.06)" })}>
+          <div style={p({ width: "72px", height: "72px", borderRadius: "10px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" })}>
             <img src="/logo-bw.png" alt={businessName} style={p({ width: "60px", height: "60px", objectFit: "contain" })} />
           </div>
           <div>
-            <div style={p({ fontWeight: 800, fontSize: "16px", color: "#0f172a" })}>{businessName}</div>
-            <div style={p({ fontSize: "12px", color: "#374151" })}>
+            <div style={p({ color: "#fff", fontWeight: 800, fontSize: "16px" })}>{businessName}</div>
+            <div style={p({ color: "#fff", fontSize: "11px", marginTop: "4px" })}>
               {businessPhone && <span>T: {businessPhone}</span>}
               {businessPhone && businessEmail && <span style={p({ margin: "0 6px" })}>•</span>}
               {businessEmail && <span>E: {businessEmail}</span>}
             </div>
-          </div>
-        </div>
-
-        <div style={p({ minWidth: "220px", textAlign: "right" })}>
-          <div style={p({ background: "#fff", padding: "10px 12px", borderRadius: "8px", boxShadow: "0 6px 14px rgba(15,23,42,0.06)", display: "inline-block" })}>
-            <div style={p({ fontSize: "10px", fontWeight: 700, color: "#6b7280" })}>QUOTATION</div>
-            <div style={p({ fontSize: "15px", fontWeight: 900, marginTop: "4px" })}>#{quotation.quotationNumber}</div>
-            <div style={p({ fontSize: "12px", color: "#374151", marginTop: "6px" })}>{formatDate(quotation.date)}</div>
           </div>
         </div>
       </div>
