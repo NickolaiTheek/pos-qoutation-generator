@@ -332,7 +332,7 @@ export default function PrintableInvoice({
       {/* ══════════════════════════════════════════════════ */}
       {/* PAGE 2 — WARRANTY CONDITIONS                      */}
       {/* ══════════════════════════════════════════════════ */}
-      <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", pageBreakBefore: "always", minHeight: "297mm" })}>
+      <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", pageBreakBefore: "always" })}>
 
         {/* ── WARRANTY HEADER ── */}
         <div style={p({ background: BLACK, padding: "10px 18mm", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
@@ -363,17 +363,6 @@ export default function PrintableInvoice({
           <WSection items={W_EN} title="Warranty Condition" />
           <WSection items={W_SI} title="වගකීම් සහතික කොන්දේසිය" />
 
-          {/* Client sign strip */}
-          <div style={p({ marginTop: "8px", borderTop: `1px solid ${BORDER}`, paddingTop: "8px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "14px" })}>
-            <p style={p({ fontSize: "8px", color: GRAY, flex: 1, lineHeight: 1.55, margin: 0 })}>
-              By accepting this invoice, the customer acknowledges having read, understood, and agreed to all warranty conditions stated above.<br />
-              <span>මෙම ඉන්වොයිසිය භාර ගැනීමෙන් ඉහත සඳහන් සියලු වගකීම් කොන්දේසිවලට සම්මත වූ බව පාරිභෝගිකයා තහවුරු කරයි.</span>
-            </p>
-            <div style={p({ textAlign: "center", minWidth: "110px" })}>
-              <div style={p({ borderBottom: `1.5px solid ${DARK}`, height: "28px", marginBottom: "4px" })} />
-              <p style={p({ fontSize: "8px", color: GRAY, margin: 0 })}>Client Signature / Date</p>
-            </div>
-          </div>
         </div>
 
         {/* ── FOOTER ── */}
