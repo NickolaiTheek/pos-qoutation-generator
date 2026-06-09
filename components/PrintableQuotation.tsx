@@ -1,5 +1,5 @@
 import { renderBold } from "@/components/ItemTable";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import type { Quotation } from "@/types";
 
 const DEFAULT_NOTE =
