@@ -91,6 +91,7 @@ export default function InvoiceDetailPage() {
         businessEmail={settings?.email ?? undefined}
         businessAddress={settings?.address ?? undefined}
         businessWeb={settings?.website ?? undefined}
+        businessLogoUrl={settings?.logoUrl ?? undefined}
       />
     </div>
   );
