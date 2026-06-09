@@ -2,13 +2,9 @@ import { renderBold } from "@/components/ItemTable";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Invoice } from "@/types";
 
-const DEFAULT_NOTE =
-  "We will visit your location and complete the full POS system setup. If any issue occurs after setup, our team can guide and support you remotely through AnyDesk, so there is no need to worry.";
-
 interface PrintableInvoiceProps {
   invoice: Invoice;
   businessName?: string;
-  businessAddress?: string;
   businessPhone?: string;
   businessEmail?: string;
   businessWeb?: string;
@@ -17,175 +13,169 @@ interface PrintableInvoiceProps {
 
 const p = (s: React.CSSProperties): React.CSSProperties => s;
 
-// ── Black & White Premium Palette ────────────────────────────
-const BLACK   = "#0a0a0a";
-const DARK    = "#1a1a1a";
-const MID     = "#2e2e2e";
-const GRAY    = "#555555";
-const LGRAY   = "#888888";
-const BORDER  = "#c8c8c8";
-const BGLIGHT = "#f7f7f7";
-const BGROW   = "#fafafa";
-const PAID_GREEN    = "#16a34a";
-const UNPAID_ORANGE = "#d97706";
-const CANCEL_RED    = "#dc2626";
+const BLACK  = "#0a0a0a";
+const DARK   = "#1c1c1c";
+const MID    = "#2e2e2e";
+const GRAY   = "#555";
+const LGRAY  = "#888";
+const BORDER = "#d0d0d0";
+const BG     = "#f8f8f8";
+const BGROW  = "#fcfcfc";
+const RED    = "#dc2626";
 
-function statusBadgeStyle(status: string): React.CSSProperties {
-  const base: React.CSSProperties = {
-    display: "inline-block",
-    padding: "2px 9px",
-    borderRadius: "2px",
-    fontWeight: 700,
-    fontSize: "9px",
-    letterSpacing: "0.8px",
-    textTransform: "uppercase",
-  };
-  if (status === "Paid")      return { ...base, background: "#f0fdf4", color: PAID_GREEN,    border: `1.5px solid ${PAID_GREEN}` };
-  if (status === "Cancelled") return { ...base, background: "#fef2f2", color: CANCEL_RED,    border: `1.5px solid ${CANCEL_RED}` };
-  return                             { ...base, background: "#fffbeb", color: UNPAID_ORANGE, border: `1.5px solid ${UNPAID_ORANGE}` };
-}
-
-// ── Warranty Data (English + Sinhala) ────────────────────────
-const WARRANTY = [
+// ── Warranty data (English + Sinhala) ─────────────────────────
+const W_EN = [
   {
-    en_t: "Duration of Warranty Coverage",
-    en_b: "The warranty period is 2 years reduced by 40 working days, 1 year reduced by 20 working days, or 6 months reduced by 10 working days, depending on the specific terms agreed upon at the time of sale.",
-    si_t: "වගකීම් ආවරණයේ කාලසීමාව",
-    si_b: "නිෂ්පාදිතය සඳහා වගකීම් කාලය, විකිණීමේදී එකඟ වූ කොන්දේසි අනුව, වසර 2ක් නම් කාර්ය දින 40කින්, වසර 1ක් නම් 20කින්, හෝ මාස 6ක් නම් 10කින් අඩු කරනු ලැබේ.",
+    t: "Duration of Warranty Coverage",
+    b: "The warranty period for product is 2 years reduced by 40 working days, 1 year reduced by 20 working days, or 6 months, reduced by 10 working days, depending on the specific terms agreed upon at the time of sale.",
   },
   {
-    en_t: "Source of Warranty",
-    en_b: "The warranty provided is from the manufacturer or their authorized agents.",
-    si_t: "වගකීම් ප්‍රභවය",
-    si_b: "ලබා දෙන ලද වගකීම නිෂ්පාදකයාගෙන් හෝ ඔවුන්ගේ බලයලත් නියෝජිතයන්ගෙනි.",
+    t: "Source of Warranty",
+    b: "The warranty provided is from the manufacturer or their authorized agents.",
   },
   {
-    en_t: "Necessary Documentation for Warranty Claims",
-    en_b: "To submit a warranty claim, the customer must provide the original purchase invoice. Each item's serial number sticker must be visible and match the one on the invoice; any tampering or alteration of the serial number voids the warranty.",
-    si_t: "වගකීම් හිමිකම් සඳහා අවශ්‍ය ලේඛන",
-    si_b: "වගකීම් හිමිකමක් ඉදිරිපත් කිරීමේදී, පාරිභෝගිකයා මූල ඉන්වොයිසිය ඉදිරිපත් කළ යුතු ය. අනු ශ්‍රේණි ස්ටිකරය ඉන්වොයිසිය සමඟ ගැළපිය යුතු අතර, ඕනෑම වෙනස් කිරීමකින් වගකීම නිෂ්ඵල වේ.",
+    t: "Necessary Documentation for Warranty Claims",
+    b: "To submit a warranty claim, the customer must provide the original purchase invoice. Additionally, each item's serial number sticker affixed to the product must be visible and match the one listed on the invoice; any tampering or alteration of the serial number voids the warranty.",
   },
   {
-    en_t: "Conditions Not Covered by the Warranty",
-    en_b: "The warranty does not cover damage from: Physical damage · Water or moisture exposure · Negligence or improper handling · Misuse or unintended use · Improper operation or maintenance · Electrical surges or outages · Overheating signs · Damage to pins or connectors · Corrosion or rust · Scratches · Lightning, floods, or earthquakes.",
-    si_t: "වගකීමෙන් ආවරණය නොවන කොන්දේසි",
-    si_b: "පහත හේතූන් නිසා ඇති වූ හානි ආවරණය නොවේ: ශාරීරික හානි · ජල හානිය · නොසැලකිල්ල · අනිසි භාවිතය · නුසුදුසු ක්‍රියාකාරිත්වය · විදුලි උඩිත්තු · අධික උෂ්ණය · ශ්‍රේෂ්ඨ හා සිදුරු හානි · මල, ක්ෂය · සීරීම් · ගිගිරිලි, ගංවතුර, භූ කම්පා.",
+    t: "Conditions Not Covered by the Warranty",
+    b: "The warranty does not cover any damage or defects resulting from:",
+    bullets: [
+      "Physical damage to the product",
+      "Water damage or exposure to moisture",
+      "Negligence or improper handling by the user",
+      "Misuse or use not in accordance with the product's intended purpose",
+      "Improper operation or maintenance",
+      "Electrical issues such as power surges, fluctuations, or outages",
+      "Visible burn marks or other signs of overheating",
+      "Damage to pins or connectors",
+      "Corrosion, rust, or other forms of material degradation",
+      "Scratches or other superficial damage",
+      "Lightning strikes, floods, earthquakes, or other natural disasters",
+    ],
   },
   {
-    en_t: "Exclusions of Specific Items",
-    en_b: "The warranty explicitly excludes printhead units, print cartridges (ink or toner), and power adapters. These are considered consumables or accessories and are not covered by the manufacturer's standard warranty.",
-    si_t: "නිශ්චිත භාණ්ඩ සඳහා බැහැර කිරීම්",
-    si_b: "ප්‍රින්ට්හෙඩ්, ප්‍රින්ට් කාට්‍රිජ් සහ පවර් ඇඩැප්ටර් සඳහා වගකීම් ආවරණය ස්පෂ්ටව බැහැර කෙරේ. මෙම භාණ්ඩ consumables ලෙස සලකනු ලැබෙන අතර නිෂ්පාදකයාගේ සම්මත වගකීමෙන් ආවරණය නොවේ.",
+    t: "Exclusions of Specific Items",
+    b: "The warranty explicitly excludes coverage for certain items, including but not limited to printhead units, print cartridges (whether ink or toner), and power adapters. These items are considered consumables or accessories and are not covered by the manufacturer's standard warranty.",
   },
   {
-    en_t: "Void Warranty Due to Sticker Removal",
-    en_b: "If the warranty sticker is found to be tampered with, removed, or otherwise altered, the warranty will be considered void and no claims will be accepted.",
-    si_t: "ස්ටිකරය ඉවත් කිරීමෙන් වගකීම් නිෂ්ඵල වීම",
-    si_b: "වගකීම් ස්ටිකරය සේ නොකළ, ඉවත් කළ, හෝ වෙනස් කළ බව සොයා ගැනුනහොත්, වගකීම නිෂ්ඵල ලෙස සලකනු ලැබෙන අතර කිසිදු හිමිකමක් බාර ගනු නොලැබේ.",
+    t: "Void Warranty Due to Sticker Removal",
+    b: "If the warranty sticker affixed to the product is found to be tampered with, removed, or otherwise altered, the warranty will be considered void, and no claims will be accepted.",
   },
   {
-    en_t: "Timeframe for Warranty Service",
-    en_b: "Any claim processed under warranty will require a minimum of 21 to 30 working days. Every effort will be made to expedite repairs or replacements and minimize delays.",
-    si_t: "වගකීම් සේවා සඳහා කාල රාමුව",
-    si_b: "වගකීම් යටතේ ඉදිරිපත් කරන ඕනෑම හිමිකමකට අවම කාර්ය දින 21–30ක් අවශ්‍ය වේ. ශීඝ්‍ර අළුත්වැඩියාව සහ ප්‍රතිස්ථාපනය සඳහා හැකි සෑම උත්සාහයක්ම ගනු ලැබේ.",
+    t: "Timeframe for Warranty Service",
+    b: "Any claim processed under warranty will require a minimum of 21 to 30 working days. This time frame is the minimum required for processing; however, every effort will be made to expedite repairs or replacements and minimize delays.",
   },
   {
-    en_t: "Manufacturer's Discretion on Warranty Resolution",
-    en_b: "The manufacturer reserves the right to determine the appropriate course of action: repairing, replacing with the same or equivalent model, or issuing a refund at current market value. A usage fee may be deducted based on how long the product was used.",
-    si_t: "වගකීම් විසඳීමේදී නිෂ්පාදකයාගේ අභිමතය",
-    si_b: "නිෂ්පාදකයා සුදුසු ක්‍රියාමාර්ගය — අළුත්වැඩියාව, ප්‍රතිස්ථාපනය, හෝ වර්තමාන වෙළෙඳ වටිනාකමින් මුදල් ආපසු ලබා දීම — තීරණය කිරීමේ අයිතිය රක්ෂා කරගනී. භාවිත කාලය අනුව ශේෂ ප්‍රමාණ අඩු කළ හැකිය.",
+    t: "Manufacturer's Discretion on Warranty Resolution",
+    b: "The manufacturer or its authorized representative reserves the right to determine the appropriate course of action for any warranty claim. This may include repairing the item, replacing it with the same or a different model with equivalent or similar features, or issuing a refund. If a refund is issued, it will reflect the current market value of the item. Additionally, a usage fee may be deducted based on how long the product was used.",
   },
   {
-    en_t: "Replacement with Higher-Featured Models",
-    en_b: "If the warranted product is unavailable at time of claim, the manufacturer may offer a replacement with higher or more advanced features. This may require the customer to pay an additional amount to cover the difference in value.",
-    si_t: "ඉහළ විශේෂාංග සහිත මාදිලි සමඟ ප්‍රතිස්ථාපනය",
-    si_b: "වගකීම් යටතේ ආවරණය කෙරෙන භාණ්ඩය ලබා ගත නොහැකි නම්, ඉහළ විශේෂාංග සහිත මාදිලියකින් ප්‍රතිස්ථාපනය ඉදිරිපත් කළ හැකිය. අගයේ වෙනස ආවරණය කිරීමට අතිරේක මුදලක් අවශ්‍ය විය හැකිය.",
+    t: "Replacement with Higher-Featured Models",
+    b: "If the product covered under warranty is not available at the time of the claim, the manufacturer may offer a replacement with a model that has higher or more advanced features. This may require the customer to pay an additional amount to cover the difference in value.",
   },
   {
-    en_t: "Disclaimer on Software Use",
-    en_b: "The company takes no responsibility for issues arising from the use of pirated or unlicensed software. Customers are strongly encouraged to use genuine, licensed software to ensure proper functionality and avoid software-related problems.",
-    si_t: "මෘදුකාංග භාවිතය පිළිබඳ වියාචනය",
-    si_b: "අනවසර හෝ නීති විරෝධී මෘදුකාංග භාවිතය නිසා ඇති වූ ගැටළු සඳහා සමාගම වගකීමක් නොදරයි. නිසි ක්‍රියාකාරිත්වය සඳහා සැබෑ, බලපත්‍රලාභී මෘදුකාංග භාවිතා කරන ලෙස නිර්දේශ කෙරේ.",
+    t: "Disclaimer on Software Use",
+    b: "The company takes no responsibility for any issues arising from the use of pirated or unlicensed software on the product. Customers are strongly encouraged to use genuine, licensed software to ensure proper functionality and avoid potential software-related problems.",
   },
 ];
 
-// ── Shared Header/Footer sub-components ──────────────────────
-function PageHeader({
-  businessName,
-  businessPhone,
-  businessEmail,
-  businessWeb,
-  logoUrl,
-  invoiceNumber,
-  label = "INVOICE",
-}: {
-  businessName: string;
-  businessPhone?: string;
-  businessEmail?: string;
-  businessWeb?: string;
-  logoUrl?: string;
-  invoiceNumber?: string;
-  label?: string;
-}) {
+const W_SI = [
+  {
+    t: "වගකීම් ආවරණයේ කාලසීමාව",
+    b: "නිෂ්පාදිතය සඳහා වගකීම් කාල සීමාව, විකිණීමේ දී එකඟ වූ නිශ්චිත කොන්දේසි අනුව, වසර 2ක් නම් කාර්ය දින 40කින්, වසර 1ක් නම් කාර්ය දින 20කින් හෝ මාස 6ක් නම් කාර්ය දින 10කින් අඩු කරනු ලැබේ.",
+  },
+  {
+    t: "වගකීම් ප්‍රභවය",
+    b: "ලබා දෙන ලද වගකීම නිෂ්පාදකයාගෙන් හෝ ඔවුන්ගේ බලයලත් නියෝජිතයන්ගෙනි.",
+  },
+  {
+    t: "වගකීම් හිමිකම් සඳහා අවශ්‍ය ලිඛිත ලේඛන",
+    b: "වගකීම් හිමිකමක් ඉදිරිපත් කිරීමේදී, පාරිභෝගිකයා මූල මිලදී ගැනීමේ ඉන්වොයිසිය ඉදිරිපත් කළ යුතු ය. එමෙන්ම, සෑම භාණ්ඩයකම අනුක්‍රමික අංක ස්ටිකරය ඉන්වොයිසිය සමඟ ගැළපිය යුතු අතර, ඕනෑම වෙනස් කිරීමකින් වගකීම නිෂ්ඵල වේ.",
+  },
+  {
+    t: "වගකීමෙන් ආවරණය නොවන කොන්දේසි",
+    b: "පහත හේතූන් නිසා ඇති වූ හානි හෝ දෝෂ වගකීමෙන් ආවරණය නොවේ:",
+    bullets: [
+      "නිෂ්පාදිතයට ශාරීරිකව සිදු වූ හානි",
+      "ජල හානිය හෝ තෙතමනයට නිරාවරණය",
+      "නොසැලකිල්ල හෝ නුසුදුසු හැසිරවීම",
+      "නිෂ්පාදිතයේ අකේශිත අරමුණට ගැළපෙන ලෙස නොසිත් ශීල් ගැනීම",
+      "නුසුදු ශ්‍රීශ් ෝ නිශ්‍චිතාර්ථ හෝ නිසි ලෙස නිම නොකිරීම",
+      "බලය කෙටිකිරීම්, ස්ථිතාංශනය හෝ කෙටිකිරීම් ශිත කළ",
+      "දෘශ්‍යමාන ගිනිගෙන රැළි සහිත අධික උෂ්ණත්ව සලකුණු",
+      "ශ්‍රේෂ්ඨ, සිදුරු හෝ සම්බන්ධකවලට හානි",
+      "මල, ක්ෂය හෝ ශ්‍රේෂ්ඨ ශ්‍රේෂ් ශ්‍ශ‍ශ් ශ්‍රේෂ් ශ්‍රේ",
+      "සීරීම් හෝ ශ්‍රේෂ් ශ්‍රේෂ් ශ්‍ශ් ශ්‍රේ ශ්‍රේ",
+      "ශ්‍රේෂ් ශ්‍රේෂ්, ගංවතුර, භූ කම්පා හෝ ශ්‍රේෂ් ශ්‍රේෂ් ශ්‍රේෂ්",
+    ],
+  },
+  {
+    t: "නිශ්චිත භාණ්ඩ සඳහා බැහැර කිරීම්",
+    b: "ප්‍රින්ට්හෙඩ් ඒකක, ප්‍රින්ට් කාට්‍රිජ් (ඉංක් හෝ ටෝනර්), සහ පවර් ඇඩැප්ටර් ඇතුළු නිශ්චිත භාණ්ඩ සඳහා වගකීම් ආවරණය ස්පෂ්ටව බැහැර කෙරේ. මෙම භාණ්ඩ consumables හෝ accessories ලෙස සලකනු ලැබෙන අතර නිෂ්පාදකයාගේ සම්මත වගකීමෙන් ආවරණය නොවේ.",
+  },
+  {
+    t: "ස්ටිකරය ඉවත් කිරීමෙන් වගකීම් නිෂ්ඵල වීම",
+    b: "නිෂ්පාදිතය මත ඇලවූ වගකීම් ස්ටිකරය සේ නොකළ, ඉවත් කළ, හෝ වෙනස් කළ බව සොයා ගැනුනහොත්, වගකීම නිෂ්ඵල ලෙස සලකනු ලැබෙන අතර කිසිදු හිමිකමක් බාර ගනු නොලැබේ.",
+  },
+  {
+    t: "වගකීම් සේවා සඳහා කාල රාමුව",
+    b: "වගකීම් යටතේ ඉදිරිපත් කරන ඕනෑම හිමිකමකට අවම කාර්ය දින 21 සිට 30 දක්වා කාලයක් අවශ්‍ය වේ. මෙය සැකසීමට අවශ්‍ය අවම කාලය වන අතර, අළුත්වැඩියාව හෝ ප්‍රතිස්ථාපනය ශීඝ්‍ර කිරීමට හැකි සෑම උත්සාහයක්ම ගනු ලැබේ.",
+  },
+  {
+    t: "වගකීම් විසඳීමේදී නිෂ්පාදකයාගේ අභිමතය",
+    b: "නිෂ්පාදකයා හෝ ඔවුන්ගේ බලයලත් නියෝජිතයා ඕනෑම වගකීම් හිමිකමක් සඳහා සුදුසු ක්‍රියාමාර්ගය — අළුත්වැඩියාව, ප්‍රතිස්ථාපනය, හෝ වර්තමාන වෙළෙඳ වටිනාකමින් මුදල් ආපසු ලබා දීම — තීරණය කිරීමේ අයිතිය රක්ෂා කරගනී. භාවිත කාලය අනුව ශේෂ ප්‍රමාණ අඩු කළ හැකිය.",
+  },
+  {
+    t: "ඉහළ විශේෂාංග සහිත මාදිලි සමඟ ප්‍රතිස්ථාපනය",
+    b: "වගකීම් යටතේ ආවරණය කෙරෙන භාණ්ඩය හිමිකම ඉදිරිපත් කිරීමේ අවස්ථාවේ ලබා ගත නොහැකි නම්, නිෂ්පාදකයා ඉහළ හෝ වැඩිදියුණු කළ විශේෂාංග සහිත මාදිලියකින් ප්‍රතිස්ථාපනය ඉදිරිපත් කළ හැකිය. අගයේ වෙනස ආවරණය කිරීමට පාරිභෝගිකයාගෙන් අතිරේක මුදලක් අවශ්‍ය විය හැකිය.",
+  },
+  {
+    t: "මෘදුකාංග භාවිතය පිළිබඳ වියාචනය",
+    b: "නිෂ්පාදිතය මත අනවසර හෝ නීති විරෝධී මෘදුකාංග භාවිතය නිසා ඇති වූ ඕනෑම ගැටළුවක් සඳහා සමාගම වගකීමක් නොදරයි. නිසි ක්‍රියාකාරිත්වය සහතික කිරීමට සහ මෘදුකාංග ගැටළු වළකා ගැනීමට පාරිභෝගිකයන් සැබෑ, බලපත්‍රලාභී මෘදුකාංග භාවිතා කරන ලෙස දැඩිව නිර්දේශ කෙරේ.",
+  },
+];
+
+function WSection({ items, title }: { items: typeof W_EN; title: string }) {
   return (
-    <div style={p({ background: BLACK, padding: "16px 20mm", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" })}>
-      {/* Left: Logo + info */}
-      <div style={p({ display: "flex", alignItems: "center", gap: "13px" })}>
-        <div style={p({ background: "#ffffff", borderRadius: "9px", padding: "5px", width: "80px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 6px rgba(0,0,0,0.35)" })}>
-          <img src={logoUrl || "/logo.png"} alt={businessName} style={p({ width: "70px", height: "70px", objectFit: "contain", display: "block" })} />
-        </div>
-        <div>
-          <p style={p({ color: "#ffffff", fontSize: "13px", margin: "0 0 4px 0", fontWeight: 800, letterSpacing: "0.3px" })}>{businessName}</p>
-          {businessPhone && <p style={p({ color: "#aaaaaa", fontSize: "9.5px", margin: "0 0 2px 0" })}>T: {businessPhone}</p>}
-          {businessEmail && <p style={p({ color: "#aaaaaa", fontSize: "9.5px", margin: "0 0 2px 0" })}>E: {businessEmail}</p>}
-          {businessWeb   && <p style={p({ color: "#aaaaaa", fontSize: "9.5px", margin: 0 })}>W: {businessWeb}</p>}
-        </div>
+    <div style={p({ marginBottom: "10px" })}>
+      {/* Section title box — OMYX style */}
+      <div style={p({ border: `2px solid ${BLACK}`, textAlign: "center", padding: "4px 10px", marginBottom: "8px", display: "inline-block", width: "100%", boxSizing: "border-box" })}>
+        <span style={p({ fontSize: "11px", fontWeight: 900, letterSpacing: "1px", color: BLACK, textTransform: "uppercase" })}>{title}</span>
       </div>
-      {/* Right: Title */}
-      <div style={p({ textAlign: "right", flexShrink: 0 })}>
-        <h1 style={p({ color: "#ffffff", fontSize: "40px", fontWeight: 900, margin: "0 0 5px 0", letterSpacing: "5px", textTransform: "uppercase", lineHeight: 1 })}>{label}</h1>
-        {invoiceNumber && <p style={p({ color: "#aaaaaa", fontSize: "10.5px", margin: 0, letterSpacing: "0.5px" })}>{invoiceNumber}</p>}
-      </div>
+
+      {items.map((w, i) => (
+        <div key={i} style={p({ display: "flex", gap: "6px", marginBottom: "5px", alignItems: "flex-start" })}>
+          <span style={p({ fontWeight: 800, fontSize: "9px", color: BLACK, minWidth: "14px", paddingTop: "1px" })}>{i + 1}.</span>
+          <div style={p({ flex: 1 })}>
+            <span style={p({ fontWeight: 700, fontSize: "9px", color: BLACK })}>{w.t}: </span>
+            <span style={p({ fontSize: "9px", color: MID, lineHeight: 1.5 })}>{w.b}</span>
+            {"bullets" in w && w.bullets && (
+              <div style={p({ marginTop: "3px", paddingLeft: "4px" })}>
+                {(w.bullets as string[]).map((b, j) => (
+                  <div key={j} style={p({ display: "flex", gap: "5px", marginBottom: "1px" })}>
+                    <span style={p({ fontSize: "9px", color: MID })}>☐</span>
+                    <span style={p({ fontSize: "9px", color: MID })}>{b}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function PageFooter({
-  businessPhone,
-  businessEmail,
-  businessWeb,
-  businessName,
-}: {
-  businessPhone?: string;
-  businessEmail?: string;
-  businessWeb?: string;
-  businessName: string;
-}) {
-  return (
-    <div style={p({ background: BLACK, padding: "8px 20mm", display: "flex", justifyContent: "center", alignItems: "center", gap: "24px", flexWrap: "wrap" })}>
-      {businessPhone && <span style={p({ color: "#888888", fontSize: "9.5px" })}>Mobile: <strong style={p({ color: "#dddddd" })}>{businessPhone}</strong></span>}
-      {businessEmail && <span style={p({ color: "#888888", fontSize: "9.5px" })}>E-Mail: <strong style={p({ color: "#dddddd" })}>{businessEmail}</strong></span>}
-      {businessWeb   && <span style={p({ color: "#888888", fontSize: "9.5px" })}>Web: <strong style={p({ color: "#dddddd" })}>{businessWeb}</strong></span>}
-      {!businessPhone && !businessEmail && !businessWeb && (
-        <span style={p({ color: "#888888", fontSize: "9.5px" })}>{businessName} — Thank you for your business!</span>
-      )}
-    </div>
-  );
-}
-
-// ── Main Component ────────────────────────────────────────────
 export default function PrintableInvoice({
   invoice,
   businessName = "Zero Pos Solutions",
-  businessAddress,
   businessPhone,
   businessEmail,
-  businessWeb,
   businessLogoUrl,
 }: PrintableInvoiceProps) {
   const items = invoice.items ?? [];
 
-  // Group items by category
   const grouped: Record<string, typeof items> = {};
   for (const item of items) {
     const cat = item.category || "General";
@@ -203,170 +193,128 @@ export default function PrintableInvoice({
   const grandTotal = typeof invoice.grandTotal === "number" && !isNaN(invoice.grandTotal) ? invoice.grandTotal : computedTotal;
   const isPaid = invoice.status === "Paid";
 
-  const sharedHeaderProps = {
-    businessName,
-    businessPhone,
-    businessEmail,
-    businessWeb,
-    logoUrl: businessLogoUrl,
-  };
-
-  const sharedFooterProps = {
-    businessPhone,
-    businessEmail,
-    businessWeb,
-    businessName,
-  };
+  const logo = businessLogoUrl || "/logo-bw.png";
 
   return (
     <div
       id="printable-invoice"
-      style={p({ background: "#f0f0f0", fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif", fontSize: "11px", color: BLACK })}
+      style={p({ fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif", fontSize: "11px", color: BLACK, background: "#e8e8e8" })}
     >
 
-      {/* ════════════════════════════════════════════════════ */}
-      {/* PAGE 1 — INVOICE                                    */}
-      {/* ════════════════════════════════════════════════════ */}
-      <div style={p({
-        background: "#ffffff",
-        width: "210mm",
-        minHeight: "297mm",
-        margin: "0 auto",
-        boxSizing: "border-box",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        pageBreakAfter: "always",
-      })}>
+      {/* ══════════════════════════════════════════════════ */}
+      {/* PAGE 1 — INVOICE                                  */}
+      {/* ══════════════════════════════════════════════════ */}
+      <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", pageBreakAfter: "always", minHeight: "297mm" })}>
 
-        {/* PAID watermark */}
         {isPaid && (
-          <div style={p({ position: "absolute", top: "42%", left: "50%", transform: "translate(-50%, -50%) rotate(-28deg)", fontSize: "80px", fontWeight: 900, color: "#000000", opacity: 0.04, letterSpacing: "8px", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap", zIndex: 0 })}>
-            PAID
-          </div>
+          <div style={p({ position: "absolute", top: "40%", left: "50%", transform: "translate(-50%,-50%) rotate(-28deg)", fontSize: "90px", fontWeight: 900, color: "#000", opacity: 0.035, letterSpacing: "8px", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap", zIndex: 0 })}>PAID</div>
         )}
 
-        {/* HEADER */}
-        <PageHeader {...sharedHeaderProps} invoiceNumber={invoice.invoiceNumber ?? "—"} />
+        {/* ── HEADER ── */}
+        <div style={p({ background: BLACK, padding: "14px 18mm", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" })}>
+          <div style={p({ display: "flex", alignItems: "center", gap: "12px" })}>
+            <div style={p({ background: "#fff", borderRadius: "8px", padding: "5px", width: "72px", height: "72px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 2px 8px rgba(0,0,0,0.4)" })}>
+              <img src={logo} alt={businessName} style={p({ width: "62px", height: "62px", objectFit: "contain" })} />
+            </div>
+            <div>
+              <p style={p({ color: "#fff", fontSize: "13px", fontWeight: 800, margin: "0 0 3px 0" })}>{businessName}</p>
+              {businessPhone && <p style={p({ color: "#aaa", fontSize: "9px", margin: "0 0 2px 0" })}>T: {businessPhone}</p>}
+              {businessEmail && <p style={p({ color: "#aaa", fontSize: "9px", margin: 0 })}>E: {businessEmail}</p>}
+            </div>
+          </div>
+          <div style={p({ textAlign: "right" })}>
+            <h1 style={p({ color: "#fff", fontSize: "42px", fontWeight: 900, margin: "0 0 4px 0", letterSpacing: "6px", lineHeight: 1 })}>INVOICE</h1>
+            <p style={p({ color: "#999", fontSize: "10px", margin: 0, letterSpacing: "0.5px" })}>{invoice.invoiceNumber ?? "—"}</p>
+          </div>
+        </div>
 
-        {/* HEADER BOTTOM BORDER */}
-        <div style={p({ background: BLACK, height: "3px" })} />
+        {/* ── ACCENT LINE ── */}
+        <div style={p({ height: "3px", background: `linear-gradient(90deg, ${BLACK} 0%, #555 50%, ${BLACK} 100%)` })} />
 
-        {/* BILL TO + INVOICE META */}
-        <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 20mm 14px 20mm", gap: "20px", background: BGLIGHT, borderBottom: `1px solid ${BORDER}`, position: "relative", zIndex: 1 })}>
-          {/* Bill To */}
-          <div style={p({ flex: "1 1 0", minWidth: 0 })}>
-            <p style={p({ fontSize: "8.5px", fontWeight: 700, letterSpacing: "1.8px", textTransform: "uppercase", color: GRAY, margin: "0 0 6px 0", borderBottom: `1.5px solid ${DARK}`, paddingBottom: "3px", display: "inline-block" })}>
-              Bill To
-            </p>
-            <p style={p({ fontWeight: 800, fontSize: "13px", margin: "0 0 2px 0", color: BLACK })}>
-              {invoice.customer?.name ?? "—"}
-            </p>
-            {invoice.customer?.businessName && <p style={p({ fontSize: "10.5px", color: MID,  margin: "0 0 1px 0" })}>{invoice.customer.businessName}</p>}
-            {invoice.customer?.mobile       && <p style={p({ fontSize: "10px",   color: GRAY, margin: "0 0 1px 0" })}>T: {invoice.customer.mobile}</p>}
-            {invoice.customer?.email        && <p style={p({ fontSize: "10px",   color: GRAY, margin: "0 0 1px 0" })}>{invoice.customer.email}</p>}
-            {invoice.customer?.address      && <p style={p({ fontSize: "10px",   color: LGRAY, margin: 0 })}>{invoice.customer.address}</p>}
+        {/* ── BILL TO + META ── */}
+        <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "13px 18mm 11px 18mm", gap: "18px", background: BG, borderBottom: `1px solid ${BORDER}`, position: "relative", zIndex: 1 })}>
+          <div style={p({ flex: "1 1 0" })}>
+            <p style={p({ fontSize: "8px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase", color: GRAY, margin: "0 0 5px 0", borderBottom: `1.5px solid ${DARK}`, paddingBottom: "3px", display: "inline-block" })}>Bill To</p>
+            <p style={p({ fontWeight: 800, fontSize: "13px", margin: "0 0 2px 0", color: BLACK })}>{invoice.customer?.name ?? "—"}</p>
+            {invoice.customer?.businessName && <p style={p({ fontSize: "10px", color: MID, margin: "0 0 1px 0" })}>{invoice.customer.businessName}</p>}
+            {invoice.customer?.mobile       && <p style={p({ fontSize: "9.5px", color: GRAY, margin: "0 0 1px 0" })}>T: {invoice.customer.mobile}</p>}
+            {invoice.customer?.email        && <p style={p({ fontSize: "9.5px", color: GRAY, margin: "0 0 1px 0" })}>{invoice.customer.email}</p>}
+            {invoice.customer?.address      && <p style={p({ fontSize: "9.5px", color: LGRAY, margin: 0 })}>{invoice.customer.address}</p>}
           </div>
 
-          {/* Invoice Meta box */}
-          <div style={p({ flex: "0 0 210px", background: "#ffffff", border: `1px solid ${BORDER}`, borderRadius: "4px", padding: "11px 13px", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" })}>
-            <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "10.5px" })}>
+          <div style={p({ flex: "0 0 185px", background: "#fff", border: `1px solid ${BORDER}`, borderRadius: "4px", padding: "10px 12px" })}>
+            <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "10px" })}>
               <tbody>
-                <tr style={p({ borderBottom: `1px solid #eeeeee` })}>
+                <tr style={p({ borderBottom: "1px solid #eee" })}>
                   <td style={p({ padding: "4px 0", color: GRAY, fontWeight: 600 })}>Invoice No.</td>
                   <td style={p({ padding: "4px 0", textAlign: "right", fontWeight: 800, color: BLACK })}>{invoice.invoiceNumber ?? "—"}</td>
                 </tr>
-                <tr style={p({ borderBottom: `1px solid #eeeeee` })}>
+                <tr>
                   <td style={p({ padding: "4px 0", color: GRAY, fontWeight: 600 })}>Date</td>
                   <td style={p({ padding: "4px 0", textAlign: "right", color: MID })}>{invoice.date ? formatDate(invoice.date) : "—"}</td>
-                </tr>
-                {invoice.quotationId && (
-                  <tr style={p({ borderBottom: `1px solid #eeeeee` })}>
-                    <td style={p({ padding: "4px 0", color: GRAY, fontWeight: 600 })}>Ref. Quotation</td>
-                    <td style={p({ padding: "4px 0", textAlign: "right", color: MID, fontSize: "9.5px", wordBreak: "break-all" })}>{invoice.quotationId}</td>
-                  </tr>
-                )}
-                <tr>
-                  <td style={p({ padding: "4px 0", color: GRAY, fontWeight: 600 })}>Status</td>
-                  <td style={p({ padding: "4px 0", textAlign: "right" })}>
-                    <span style={statusBadgeStyle(invoice.status)}>{invoice.status}</span>
-                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* ITEMS */}
-        <div style={p({ padding: "12px 20mm 0 20mm", flex: 1, position: "relative", zIndex: 1 })}>
+        {/* ── ITEMS ── */}
+        <div style={p({ padding: "10px 18mm 0 18mm", flex: 1, position: "relative", zIndex: 1 })}>
           {categoryOrder.map((cat) => {
-            const catItems = grouped[cat];
-            const catSubtotal = catItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitPrice ?? 0), 0);
-            const catDiscount = catItems.reduce((s, i) => s + (i.discount ?? 0), 0);
-            const catTotal    = catSubtotal - catDiscount;
+            const catItems  = grouped[cat];
+            const catSub    = catItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitPrice ?? 0), 0);
+            const catDisc   = catItems.reduce((s, i) => s + (i.discount ?? 0), 0);
+            const catTotal  = catSub - catDisc;
 
             return (
-              <div key={cat} style={p({ marginBottom: "14px" })}>
-                <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "10.5px" })}>
+              <div key={cat} style={p({ marginBottom: "10px" })}>
+                <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "10px" })}>
                   <thead>
                     <tr style={p({ background: DARK })}>
-                      <th style={p({ padding: "8px 10px", textAlign: "left",   color: "#ffffff", fontWeight: 700, fontSize: "10.5px", width: "52%" })}>{cat}</th>
-                      <th style={p({ padding: "8px 10px", textAlign: "center", color: "#bbbbbb", fontWeight: 600, fontSize: "10px",   width: "10%" })}>Qty</th>
-                      <th style={p({ padding: "8px 10px", textAlign: "right",  color: "#bbbbbb", fontWeight: 600, fontSize: "10px",   width: "19%" })}>Unit Price</th>
-                      <th style={p({ padding: "8px 10px", textAlign: "right",  color: "#ffffff", fontWeight: 700, fontSize: "10px",   width: "19%" })}>Total</th>
+                      <th style={p({ padding: "7px 9px", textAlign: "left",   color: "#fff", fontWeight: 700, width: "53%" })}>{cat}</th>
+                      <th style={p({ padding: "7px 9px", textAlign: "center", color: "#bbb", fontWeight: 600, width: "9%"  })}>Qty</th>
+                      <th style={p({ padding: "7px 9px", textAlign: "right",  color: "#bbb", fontWeight: 600, width: "19%" })}>Unit Price</th>
+                      <th style={p({ padding: "7px 9px", textAlign: "right",  color: "#fff", fontWeight: 700, width: "19%" })}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {catItems.map((item, idx) => (
-                      <tr key={item.id} style={p({ background: idx % 2 === 0 ? "#ffffff" : BGROW, borderBottom: `1px solid #e8e8e8` })}>
-                        <td style={p({ padding: "7px 10px", verticalAlign: "top" })}>
+                      <tr key={item.id} style={p({ background: idx % 2 === 0 ? "#fff" : BGROW, borderBottom: "1px solid #ebebeb" })}>
+                        <td style={p({ padding: "6px 9px", verticalAlign: "top" })}>
                           <span style={p({ fontWeight: 700, color: BLACK, display: "block" })}>{item.name}</span>
-                          {item.description && (
-                            <span style={p({ fontWeight: 400, fontSize: "10px", color: GRAY, display: "block", marginTop: "1px", lineHeight: 1.5 })}>
-                              {renderBold(item.description)}
-                            </span>
-                          )}
-                          {item.warranty && (
-                            <span style={p({ fontStyle: "italic", fontSize: "9.5px", color: LGRAY, display: "block", marginTop: "1px" })}>
-                              {item.warranty}
-                            </span>
-                          )}
+                          {item.description && <span style={p({ fontSize: "9.5px", color: GRAY, display: "block", marginTop: "1px", lineHeight: 1.45 })}>{renderBold(item.description)}</span>}
+                          {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "9px", color: LGRAY, display: "block", marginTop: "1px" })}>{item.warranty}</span>}
                         </td>
-                        <td style={p({ padding: "7px 10px", textAlign: "center", verticalAlign: "top", color: MID, fontWeight: 600 })}>{item.quantity ?? 0}</td>
-                        <td style={p({ padding: "7px 10px", textAlign: "right", verticalAlign: "top", color: MID, whiteSpace: "nowrap" })}>
-                          {(item.unitPrice ?? 0) === 0
-                            ? <span style={p({ color: BLACK, fontWeight: 700, fontSize: "10px" })}>Free</span>
-                            : formatCurrency(item.unitPrice ?? 0)}
+                        <td style={p({ padding: "6px 9px", textAlign: "center", verticalAlign: "top", color: MID, fontWeight: 600 })}>{item.quantity ?? 0}</td>
+                        <td style={p({ padding: "6px 9px", textAlign: "right", verticalAlign: "top", color: MID, whiteSpace: "nowrap" })}>
+                          {(item.unitPrice ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: BLACK })}>Free</span> : formatCurrency(item.unitPrice ?? 0)}
                         </td>
-                        <td style={p({ padding: "7px 10px", textAlign: "right", verticalAlign: "top", fontWeight: 700, color: BLACK, whiteSpace: "nowrap" })}>
-                          {(item.total ?? 0) === 0
-                            ? <span style={p({ color: BLACK, fontWeight: 700, fontSize: "10px" })}>Free</span>
-                            : formatCurrency(item.total ?? 0)}
+                        <td style={p({ padding: "6px 9px", textAlign: "right", verticalAlign: "top", fontWeight: 700, color: BLACK, whiteSpace: "nowrap" })}>
+                          {(item.total ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: BLACK })}>Free</span> : formatCurrency(item.total ?? 0)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
-                {/* Category subtotal */}
-                <div style={p({ display: "flex", justifyContent: "flex-end", background: BGLIGHT, borderTop: `2px solid ${BORDER}` })}>
-                  <table style={p({ borderCollapse: "collapse", fontSize: "10px", minWidth: "230px" })}>
+                <div style={p({ display: "flex", justifyContent: "flex-end", background: BG, borderTop: `2px solid ${BORDER}` })}>
+                  <table style={p({ borderCollapse: "collapse", fontSize: "9.5px", minWidth: "210px" })}>
                     <tbody>
-                      {catDiscount > 0 && (
+                      {catDisc > 0 && (
                         <>
                           <tr>
-                            <td style={p({ padding: "3px 14px 3px 10px", color: GRAY })}>Sub Total</td>
-                            <td style={p({ padding: "3px 10px 3px 0", textAlign: "right", minWidth: "100px", color: MID })}>{formatCurrency(catSubtotal)}</td>
+                            <td style={p({ padding: "3px 12px 3px 8px", color: GRAY })}>Sub Total</td>
+                            <td style={p({ padding: "3px 9px 3px 0", textAlign: "right", minWidth: "95px", color: MID })}>{formatCurrency(catSub)}</td>
                           </tr>
                           <tr>
-                            <td style={p({ padding: "3px 14px 3px 10px", color: GRAY })}>Discount</td>
-                            <td style={p({ padding: "3px 10px 3px 0", textAlign: "right", color: CANCEL_RED })}>−{formatCurrency(catDiscount)}</td>
+                            <td style={p({ padding: "3px 12px 3px 8px", color: GRAY })}>Discount</td>
+                            <td style={p({ padding: "3px 9px 3px 0", textAlign: "right", color: RED })}>−{formatCurrency(catDisc)}</td>
                           </tr>
                         </>
                       )}
-                      <tr style={p({ borderTop: catDiscount > 0 ? `1px solid ${BORDER}` : "none" })}>
-                        <td style={p({ padding: "5px 14px 5px 10px", fontWeight: 800, color: BLACK })}>{cat} Total</td>
-                        <td style={p({ padding: "5px 10px 5px 0", textAlign: "right", fontWeight: 800, color: BLACK })}>{formatCurrency(catTotal)}</td>
+                      <tr style={p({ borderTop: catDisc > 0 ? `1px solid ${BORDER}` : "none" })}>
+                        <td style={p({ padding: "4px 12px 4px 8px", fontWeight: 800, color: BLACK })}>{cat} Total</td>
+                        <td style={p({ padding: "4px 9px 4px 0",  fontWeight: 800, color: BLACK, textAlign: "right" })}>{formatCurrency(catTotal)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -375,141 +323,100 @@ export default function PrintableInvoice({
             );
           })}
 
-          {/* GRAND TOTAL */}
-          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "4px 0 16px 0" })}>
-            <div style={p({ background: BLACK, borderRadius: "3px", padding: "10px 16px 10px 22px", display: "flex", alignItems: "center", gap: "36px", minWidth: "255px" })}>
-              <span style={p({ color: "#aaaaaa", fontSize: "11px", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" })}>Grand Total</span>
-              <span style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 900, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
+          {/* ── GRAND TOTAL ── */}
+          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "4px 0 14px 0" })}>
+            <div style={p({ background: BLACK, borderRadius: "3px", padding: "9px 14px 9px 20px", display: "flex", alignItems: "center", gap: "32px", minWidth: "240px" })}>
+              <span style={p({ color: "#999", fontSize: "10.5px", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" })}>Grand Total</span>
+              <span style={p({ color: "#fff", fontSize: "15px", fontWeight: 900, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
             </div>
           </div>
 
-          {/* NOTE */}
-          {(invoice.note || DEFAULT_NOTE) && (
-            <div style={p({ borderLeft: `4px solid ${BLACK}`, background: BGLIGHT, padding: "8px 12px", marginBottom: "16px", borderRadius: "0 3px 3px 0" })}>
-              <p style={p({ fontWeight: 700, fontSize: "8.5px", textTransform: "uppercase", color: GRAY, marginBottom: "3px", letterSpacing: "1.2px" })}>NOTE:</p>
-              <p style={p({ fontSize: "9.5px", lineHeight: 1.7, color: MID, margin: 0 })}>{invoice.note || DEFAULT_NOTE}</p>
+          {/* ── NOTE (only if explicitly set) ── */}
+          {invoice.note && (
+            <div style={p({ borderLeft: `4px solid ${BLACK}`, background: BG, padding: "7px 11px", marginBottom: "12px", borderRadius: "0 3px 3px 0" })}>
+              <p style={p({ fontWeight: 700, fontSize: "8px", textTransform: "uppercase", color: GRAY, marginBottom: "3px", letterSpacing: "1.2px" })}>NOTE:</p>
+              <p style={p({ fontSize: "9.5px", lineHeight: 1.65, color: MID, margin: 0 })}>{invoice.note}</p>
             </div>
           )}
 
-          {/* SIGNATURES */}
-          <div style={p({ marginBottom: "20px", marginTop: "10px" })}>
-            <div style={p({ display: "flex", justifyContent: "space-between", gap: "16px" })}>
+          {/* ── SIGNATURES ── */}
+          <div style={p({ marginBottom: "14px", marginTop: "auto", paddingTop: "16px" })}>
+            <div style={p({ display: "flex", justifyContent: "space-between", gap: "14px" })}>
               {[
-                { role: "Director", title: "Authorized By", subtitle: businessName },
-                { role: "Director", title: "Prepared By",   subtitle: businessName },
-                { role: "Client",   title: "Received By",   subtitle: "Customer Acknowledgment" },
-              ].map((sig, i) => (
+                { title: "Authorized By", role: "Director", sub: businessName },
+                { title: "Prepared By",   role: "Director", sub: businessName },
+                { title: "Received By",   role: "Client",   sub: "Customer Acknowledgment" },
+              ].map((s, i) => (
                 <div key={i} style={p({ flex: "1 1 0", textAlign: "center" })}>
-                  <div style={p({ borderBottom: `1.5px solid ${DARK}`, height: "42px", marginBottom: "6px" })} />
-                  <p style={p({ fontSize: "10px", fontWeight: 700, color: BLACK, margin: "0 0 1px 0" })}>{sig.title}</p>
-                  <p style={p({ fontSize: "9px",  fontWeight: 600, color: GRAY,  margin: "0 0 1px 0" })}>{sig.role}</p>
-                  <p style={p({ fontSize: "8.5px", color: LGRAY, margin: 0 })}>{sig.subtitle}</p>
+                  <div style={p({ borderBottom: `1.5px solid ${DARK}`, height: "38px", marginBottom: "5px" })} />
+                  <p style={p({ fontSize: "9.5px", fontWeight: 700, color: BLACK, margin: "0 0 1px 0" })}>{s.title}</p>
+                  <p style={p({ fontSize: "8.5px", fontWeight: 600, color: GRAY,  margin: "0 0 1px 0" })}>{s.role}</p>
+                  <p style={p({ fontSize: "8px",   color: LGRAY, margin: 0 })}>{s.sub}</p>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* FOOTER */}
-        <PageFooter {...sharedFooterProps} />
+        {/* ── FOOTER ── */}
+        <div style={p({ background: BLACK, padding: "7px 18mm", display: "flex", justifyContent: "center", alignItems: "center", gap: "22px", flexWrap: "wrap" })}>
+          {businessPhone && <span style={p({ color: "#888", fontSize: "9px" })}>Mobile: <strong style={p({ color: "#ddd" })}>{businessPhone}</strong></span>}
+          {businessEmail && <span style={p({ color: "#888", fontSize: "9px" })}>E-Mail: <strong style={p({ color: "#ddd" })}>{businessEmail}</strong></span>}
+        </div>
       </div>
 
-      {/* ════════════════════════════════════════════════════ */}
-      {/* PAGE 2 — WARRANTY CONDITIONS                        */}
-      {/* ════════════════════════════════════════════════════ */}
-      <div style={p({
-        background: "#ffffff",
-        width: "210mm",
-        minHeight: "297mm",
-        margin: "0 auto",
-        boxSizing: "border-box",
-        display: "flex",
-        flexDirection: "column",
-        pageBreakBefore: "always",
-      })}>
+      {/* ══════════════════════════════════════════════════ */}
+      {/* PAGE 2 — WARRANTY CONDITIONS                      */}
+      {/* ══════════════════════════════════════════════════ */}
+      <div style={p({ background: "#fff", width: "210mm", margin: "0 auto", boxSizing: "border-box", display: "flex", flexDirection: "column", pageBreakBefore: "always", minHeight: "297mm" })}>
 
-        {/* COMPACT HEADER */}
-        <div style={p({ background: BLACK, padding: "12px 20mm", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
+        {/* ── WARRANTY HEADER ── */}
+        <div style={p({ background: BLACK, padding: "10px 18mm", display: "flex", justifyContent: "space-between", alignItems: "center" })}>
           <div style={p({ display: "flex", alignItems: "center", gap: "10px" })}>
-            <div style={p({ background: "#ffffff", borderRadius: "7px", padding: "4px", width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 })}>
-              <img src={businessLogoUrl || "/logo.png"} alt={businessName} style={p({ width: "44px", height: "44px", objectFit: "contain" })} />
+            <div style={p({ background: "#fff", borderRadius: "6px", padding: "4px", width: "50px", height: "50px", display: "flex", alignItems: "center", justifyContent: "center" })}>
+              <img src={logo} alt={businessName} style={p({ width: "42px", height: "42px", objectFit: "contain" })} />
             </div>
             <div>
-              <p style={p({ color: "#ffffff", fontSize: "11px", fontWeight: 800, margin: "0 0 2px 0" })}>{businessName}</p>
-              {businessPhone && <p style={p({ color: "#aaaaaa", fontSize: "8.5px", margin: 0 })}>T: {businessPhone}</p>}
+              <p style={p({ color: "#fff", fontSize: "11px", fontWeight: 800, margin: "0 0 1px 0" })}>{businessName}</p>
+              {businessPhone && <p style={p({ color: "#aaa", fontSize: "8.5px", margin: 0 })}>T: {businessPhone}</p>}
             </div>
           </div>
           <div style={p({ textAlign: "right" })}>
-            <p style={p({ color: "#ffffff", fontSize: "16px", fontWeight: 900, letterSpacing: "3px", margin: "0 0 2px 0" })}>WARRANTY</p>
-            <p style={p({ color: "#aaaaaa", fontSize: "8.5px", margin: 0, letterSpacing: "0.3px" })}>CONDITIONS</p>
+            <p style={p({ color: "#fff", fontSize: "17px", fontWeight: 900, letterSpacing: "3px", margin: "0 0 1px 0" })}>WARRANTY</p>
+            <p style={p({ color: "#999", fontSize: "8.5px", margin: 0, letterSpacing: "0.5px" })}>CONDITIONS</p>
           </div>
         </div>
 
-        {/* INVOICE REFERENCE BAR */}
-        <div style={p({ background: BGLIGHT, borderBottom: `1px solid ${BORDER}`, padding: "6px 20mm", display: "flex", gap: "24px", alignItems: "center" })}>
-          <span style={p({ fontSize: "9px", color: GRAY })}>Invoice: <strong style={p({ color: BLACK })}>{invoice.invoiceNumber ?? "—"}</strong></span>
-          {invoice.customer?.name && <span style={p({ fontSize: "9px", color: GRAY })}>Customer: <strong style={p({ color: BLACK })}>{invoice.customer.name}</strong></span>}
-          {invoice.date && <span style={p({ fontSize: "9px", color: GRAY })}>Date: <strong style={p({ color: BLACK })}>{formatDate(invoice.date)}</strong></span>}
+        {/* ── INVOICE REF BAR ── */}
+        <div style={p({ background: BG, borderBottom: `1px solid ${BORDER}`, padding: "5px 18mm", display: "flex", gap: "20px" })}>
+          <span style={p({ fontSize: "8.5px", color: GRAY })}>Invoice: <strong style={p({ color: BLACK })}>{invoice.invoiceNumber ?? "—"}</strong></span>
+          {invoice.customer?.name && <span style={p({ fontSize: "8.5px", color: GRAY })}>Customer: <strong style={p({ color: BLACK })}>{invoice.customer.name}</strong></span>}
+          {invoice.date           && <span style={p({ fontSize: "8.5px", color: GRAY })}>Date: <strong style={p({ color: BLACK })}>{formatDate(invoice.date)}</strong></span>}
         </div>
 
-        {/* WARRANTY TITLE */}
-        <div style={p({ padding: "10px 20mm 6px 20mm", borderBottom: `2px solid ${DARK}` })}>
-          <p style={p({ fontSize: "12px", fontWeight: 900, color: BLACK, margin: "0 0 2px 0", letterSpacing: "0.5px", textTransform: "uppercase" })}>
-            Warranty Conditions
-          </p>
-          <p style={p({ fontSize: "11px", fontWeight: 700, color: MID, margin: 0 })}>
-            වගකීම් සහතික කොන්දේසිය
-          </p>
-        </div>
+        {/* ── WARRANTY CONTENT ── */}
+        <div style={p({ padding: "10px 18mm 10px 18mm", flex: 1 })}>
+          <WSection items={W_EN} title="Warranty Condition" />
+          <WSection items={W_SI} title="වගකීම් සහතික කොන්දේසිය" />
 
-        {/* WARRANTY TABLE — English | Sinhala side by side */}
-        <div style={p({ padding: "8px 20mm 12px 20mm", flex: 1 })}>
-          <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "9px", lineHeight: 1.55 })}>
-            {/* Column headers */}
-            <thead>
-              <tr style={p({ background: DARK })}>
-                <th style={p({ width: "22px", padding: "5px 6px", color: "#aaaaaa", fontWeight: 700, textAlign: "center", verticalAlign: "middle", borderRight: `1px solid #444` })}>#</th>
-                <th style={p({ width: "50%", padding: "5px 9px", color: "#ffffff", fontWeight: 700, textAlign: "left", verticalAlign: "middle", borderRight: `1px solid #444` })}>English</th>
-                <th style={p({ padding: "5px 9px", color: "#ffffff", fontWeight: 700, textAlign: "left", verticalAlign: "middle" })}>සිංහල</th>
-              </tr>
-            </thead>
-            <tbody>
-              {WARRANTY.map((w, i) => (
-                <tr key={i} style={p({ background: i % 2 === 0 ? "#ffffff" : BGROW, borderBottom: `1px solid #e4e4e4` })}>
-                  {/* Number */}
-                  <td style={p({ padding: "6px 6px", textAlign: "center", verticalAlign: "top", fontWeight: 800, color: BLACK, borderRight: `1px solid ${BORDER}` })}>
-                    {i + 1}
-                  </td>
-                  {/* English */}
-                  <td style={p({ padding: "6px 9px", verticalAlign: "top", borderRight: `1px solid ${BORDER}` })}>
-                    <span style={p({ fontWeight: 700, color: BLACK, display: "block", marginBottom: "2px", fontSize: "8.5px" })}>{w.en_t}</span>
-                    <span style={p({ color: MID, fontSize: "8.5px" })}>{w.en_b}</span>
-                  </td>
-                  {/* Sinhala */}
-                  <td style={p({ padding: "6px 9px", verticalAlign: "top" })}>
-                    <span style={p({ fontWeight: 700, color: BLACK, display: "block", marginBottom: "2px", fontSize: "8.5px" })}>{w.si_t}</span>
-                    <span style={p({ color: MID, fontSize: "8.5px" })}>{w.si_b}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Acceptance signature strip at bottom of page 2 */}
-          <div style={p({ marginTop: "14px", borderTop: `1px solid ${BORDER}`, paddingTop: "10px", display: "flex", justifyContent: "space-between", gap: "16px" })}>
-            <p style={p({ fontSize: "8.5px", color: GRAY, flex: 1, lineHeight: 1.6, margin: 0 })}>
+          {/* Client sign strip */}
+          <div style={p({ marginTop: "8px", borderTop: `1px solid ${BORDER}`, paddingTop: "8px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "14px" })}>
+            <p style={p({ fontSize: "8px", color: GRAY, flex: 1, lineHeight: 1.55, margin: 0 })}>
               By accepting this invoice, the customer acknowledges having read, understood, and agreed to all warranty conditions stated above.<br />
-              <span style={p({ fontSize: "8.5px" })}>මෙම ඉන්වොයිසිය භාර ගැනීමෙන් ඉහත සඳහන් සියලු වගකීම් කොන්දේසිවලට සහ ප්‍රකාශනවලට සම්මත වූ බව පාරිභෝගිකයා තහවුරු කරයි.</span>
+              <span>මෙම ඉන්වොයිසිය භාර ගැනීමෙන් ඉහත සඳහන් සියලු වගකීම් කොන්දේසිවලට සම්මත වූ බව පාරිභෝගිකයා තහවුරු කරයි.</span>
             </p>
-            <div style={p({ textAlign: "center", minWidth: "120px" })}>
-              <div style={p({ borderBottom: `1.5px solid ${DARK}`, height: "30px", marginBottom: "4px" })} />
-              <p style={p({ fontSize: "8.5px", color: GRAY, margin: 0 })}>Client Signature / Date</p>
+            <div style={p({ textAlign: "center", minWidth: "110px" })}>
+              <div style={p({ borderBottom: `1.5px solid ${DARK}`, height: "28px", marginBottom: "4px" })} />
+              <p style={p({ fontSize: "8px", color: GRAY, margin: 0 })}>Client Signature / Date</p>
             </div>
           </div>
         </div>
 
-        {/* FOOTER */}
-        <PageFooter {...sharedFooterProps} />
+        {/* ── FOOTER ── */}
+        <div style={p({ background: BLACK, padding: "7px 18mm", display: "flex", justifyContent: "center", alignItems: "center", gap: "22px", flexWrap: "wrap" })}>
+          {businessPhone && <span style={p({ color: "#888", fontSize: "9px" })}>Mobile: <strong style={p({ color: "#ddd" })}>{businessPhone}</strong></span>}
+          {businessEmail && <span style={p({ color: "#888", fontSize: "9px" })}>E-Mail: <strong style={p({ color: "#ddd" })}>{businessEmail}</strong></span>}
+        </div>
       </div>
 
     </div>
