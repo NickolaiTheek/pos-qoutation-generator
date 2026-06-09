@@ -26,113 +26,87 @@ const RED    = "#dc2626";
 // ── Warranty data (English + Sinhala) ─────────────────────────
 const W_EN = [
   {
-    t: "Duration of Warranty Coverage",
-    b: "The warranty period for product is 2 years reduced by 40 working days, 1 year reduced by 20 working days, or 6 months, reduced by 10 working days, depending on the specific terms agreed upon at the time of sale.",
+    t: "Hardware Warranty",
+    b: "Hardware items are covered by a 1-year shop warranty from the invoice date.",
   },
   {
-    t: "Source of Warranty",
-    b: "The warranty provided is from the manufacturer or their authorized agents.",
+    t: "Software Support",
+    b: "Software includes lifetime bug-fixing support for the agreed system features only.",
   },
   {
-    t: "Necessary Documentation for Warranty Claims",
-    b: "To submit a warranty claim, the customer must provide the original purchase invoice. Additionally, each item's serial number sticker affixed to the product must be visible and match the one listed on the invoice; any tampering or alteration of the serial number voids the warranty.",
+    t: "Scope of Warranty",
+    b: "Warranty applies only to products and services supplied by Zero Pos Solutions.",
   },
   {
-    t: "Conditions Not Covered by the Warranty",
-    b: "The warranty does not cover any damage or defects resulting from:",
-    bullets: [
-      "Physical damage to the product",
-      "Water damage or exposure to moisture",
-      "Negligence or improper handling by the user",
-      "Misuse or use not in accordance with the product's intended purpose",
-      "Improper operation or maintenance",
-      "Electrical issues such as power surges, fluctuations, or outages",
-      "Visible burn marks or other signs of overheating",
-      "Damage to pins or connectors",
-      "Corrosion, rust, or other forms of material degradation",
-      "Scratches or other superficial damage",
-      "Lightning strikes, floods, earthquakes, or other natural disasters",
-    ],
+    t: "Exclusions",
+    b: "Warranty does not cover physical damage, water damage, fire damage, power issues, or misuse.",
   },
   {
-    t: "Exclusions of Specific Items",
-    b: "The warranty explicitly excludes coverage for certain items, including but not limited to printhead units, print cartridges (whether ink or toner), and power adapters. These items are considered consumables or accessories and are not covered by the manufacturer's standard warranty.",
+    t: "Warranty Void Conditions",
+    b: "Unauthorized repairs, opening devices, removing warranty stickers, or tampering with serial numbers will void the warranty.",
   },
   {
-    t: "Void Warranty Due to Sticker Removal",
-    b: "If the warranty sticker affixed to the product is found to be tampered with, removed, or otherwise altered, the warranty will be considered void, and no claims will be accepted.",
+    t: "Additional Changes & Development",
+    b: "Small additional changes or minor adjustments may be provided free of charge where possible. However, major new features, new modules, custom reports, or major business logic changes may include an additional development charge.",
   },
   {
-    t: "Timeframe for Warranty Service",
-    b: "Any claim processed under warranty will require a minimum of 21 to 30 working days. This time frame is the minimum required for processing; however, every effort will be made to expedite repairs or replacements and minimize delays.",
+    t: "Third-Party & Infrastructure Issues",
+    b: "Internet issues, network issues, printer driver issues, operating system issues, and third-party software issues are not covered under warranty.",
   },
   {
-    t: "Manufacturer's Discretion on Warranty Resolution",
-    b: "The manufacturer or its authorized representative reserves the right to determine the appropriate course of action for any warranty claim. This may include repairing the item, replacing it with the same or a different model with equivalent or similar features, or issuing a refund. If a refund is issued, it will reflect the current market value of the item. Additionally, a usage fee may be deducted based on how long the product was used.",
+    t: "Warranty Claim Requirements",
+    b: "Warranty claims require the original invoice and product serial number or warranty sticker where applicable.",
   },
   {
-    t: "Replacement with Higher-Featured Models",
-    b: "If the product covered under warranty is not available at the time of the claim, the manufacturer may offer a replacement with a model that has higher or more advanced features. This may require the customer to pay an additional amount to cover the difference in value.",
+    t: "Support Methods",
+    b: "Remote support may be provided through AnyDesk or similar tools. On-site support may include a service charge depending on the issue and location.",
   },
   {
-    t: "Disclaimer on Software Use",
-    b: "The company takes no responsibility for any issues arising from the use of pirated or unlicensed software on the product. Customers are strongly encouraged to use genuine, licensed software to ensure proper functionality and avoid potential software-related problems.",
+    t: "Customer Responsibilities",
+    b: "Customers are responsible for keeping regular data backups and using the system according to the provided guidance.",
   },
 ];
 
 const W_SI = [
   {
-    t: "වගකීම් ආවරණයේ කාලසීමාව",
-    b: "නිෂ්පාදිතය සඳහා වගකීම් කාල සීමාව, විකිණීමේ දී එකඟ වූ නිශ්චිත කොන්දේසි අනුව, වසර 2ක් නම් කාර්ය දින 40කින්, වසර 1ක් නම් කාර්ය දින 20කින් හෝ මාස 6ක් නම් කාර්ය දින 10කින් අඩු කරනු ලැබේ.",
+    t: "Hardware Warranty",
+    b: "Hardware items සඳහා invoice date එකේ සිට අවුරුදු 1ක shop warranty එකක් ලබාදේ.",
   },
   {
-    t: "වගකීම් ප්‍රභවය",
-    b: "ලබා දෙන ලද වගකීම නිෂ්පාදකයාගෙන් හෝ ඔවුන්ගේ බලයලත් නියෝජිතයන්ගෙනි.",
+    t: "Software Support",
+    b: "Software සඳහා එකඟ වූ system features වල bugs පමණක් lifetime bug-fixing support යටතේ නිවැරදි කරදේ.",
   },
   {
-    t: "වගකීම් හිමිකම් සඳහා අවශ්‍ය ලිඛිත ලේඛන",
-    b: "වගකීම් හිමිකමක් ඉදිරිපත් කිරීමේදී, පාරිභෝගිකයා මූල මිලදී ගැනීමේ ඉන්වොයිසිය ඉදිරිපත් කළ යුතු ය. එමෙන්ම, සෑම භාණ්ඩයකම අනුක්‍රමික අංක ස්ටිකරය ඉන්වොයිසිය සමඟ ගැළපිය යුතු අතර, ඕනෑම වෙනස් කිරීමකින් වගකීම නිෂ්ඵල වේ.",
+    t: "Warranty ආවරණය",
+    b: "Warranty එක අදාළ වන්නේ Zero Pos Solutions විසින් ලබාදුන් products සහ services සඳහා පමණි.",
   },
   {
-    t: "වගකීමෙන් ආවරණය නොවන කොන්දේසි",
-    b: "පහත හේතූන් නිසා ඇති වූ හානි හෝ දෝෂ වගකීමෙන් ආවරණය නොවේ:",
-    bullets: [
-      "නිෂ්පාදිතයට ශාරීරිකව සිදු වූ හානි",
-      "ජල හානිය හෝ තෙතමනයට නිරාවරණය",
-      "නොසැලකිල්ල හෝ නුසුදුසු හැසිරවීම",
-      "නිෂ්පාදිතයේ අකේශිත අරමුණට ගැළපෙන ලෙස නොසිත් ශීල් ගැනීම",
-      "නුසුදු ශ්‍රීශ් ෝ නිශ්‍චිතාර්ථ හෝ නිසි ලෙස නිම නොකිරීම",
-      "බලය කෙටිකිරීම්, ස්ථිතාංශනය හෝ කෙටිකිරීම් ශිත කළ",
-      "දෘශ්‍යමාන ගිනිගෙන රැළි සහිත අධික උෂ්ණත්ව සලකුණු",
-      "ශ්‍රේෂ්ඨ, සිදුරු හෝ සම්බන්ධකවලට හානි",
-      "මල, ක්ෂය හෝ ශ්‍රේෂ්ඨ ශ්‍රේෂ් ශ්‍ශ‍ශ් ශ්‍රේෂ් ශ්‍රේ",
-      "සීරීම් හෝ ශ්‍රේෂ් ශ්‍රේෂ් ශ්‍ශ් ශ්‍රේ ශ්‍රේ",
-      "ශ්‍රේෂ් ශ්‍රේෂ්, ගංවතුර, භූ කම්පා හෝ ශ්‍රේෂ් ශ්‍රේෂ් ශ්‍රේෂ්",
-    ],
+    t: "ආවරණය නොවන කොන්දේසි",
+    b: "Physical damage, water damage, fire damage, power issues, හෝ misuse warranty එකට ඇතුළත් නොවේ.",
   },
   {
-    t: "නිශ්චිත භාණ්ඩ සඳහා බැහැර කිරීම්",
-    b: "ප්‍රින්ට්හෙඩ් ඒකක, ප්‍රින්ට් කාට්‍රිජ් (ඉංක් හෝ ටෝනර්), සහ පවර් ඇඩැප්ටර් ඇතුළු නිශ්චිත භාණ්ඩ සඳහා වගකීම් ආවරණය ස්පෂ්ටව බැහැර කෙරේ. මෙම භාණ්ඩ consumables හෝ accessories ලෙස සලකනු ලැබෙන අතර නිෂ්පාදකයාගේ සම්මත වගකීමෙන් ආවරණය නොවේ.",
+    t: "Warranty නිෂ්ඵල වන අවස්ථා",
+    b: "Unauthorized repairs, device open කිරීම, warranty sticker remove කිරීම, හෝ serial number tamper කිරීම warranty void වීමට හේතු වේ.",
   },
   {
-    t: "ස්ටිකරය ඉවත් කිරීමෙන් වගකීම් නිෂ්ඵල වීම",
-    b: "නිෂ්පාදිතය මත ඇලවූ වගකීම් ස්ටිකරය සේ නොකළ, ඉවත් කළ, හෝ වෙනස් කළ බව සොයා ගැනුනහොත්, වගකීම නිෂ්ඵල ලෙස සලකනු ලැබෙන අතර කිසිදු හිමිකමක් බාර ගනු නොලැබේ.",
+    t: "අමතර වෙනස්කම් සහ Development",
+    b: "කුඩා additional changes හෝ minor adjustments හැකි අවස්ථාවලදී free ලෙස ලබාදිය හැක. නමුත් major new features, new modules, custom reports, හෝ major business logic changes සඳහා additional development charge එකක් අදාළ විය හැක.",
   },
   {
-    t: "වගකීම් සේවා සඳහා කාල රාමුව",
-    b: "වගකීම් යටතේ ඉදිරිපත් කරන ඕනෑම හිමිකමකට අවම කාර්ය දින 21 සිට 30 දක්වා කාලයක් අවශ්‍ය වේ. මෙය සැකසීමට අවශ්‍ය අවම කාලය වන අතර, අළුත්වැඩියාව හෝ ප්‍රතිස්ථාපනය ශීඝ්‍ර කිරීමට හැකි සෑම උත්සාහයක්ම ගනු ලැබේ.",
+    t: "Third-Party සහ Infrastructure ගැටළු",
+    b: "Internet issues, network issues, printer driver issues, operating system issues, සහ third-party software issues warranty එකට ඇතුළත් නොවේ.",
   },
   {
-    t: "වගකීම් විසඳීමේදී නිෂ්පාදකයාගේ අභිමතය",
-    b: "නිෂ්පාදකයා හෝ ඔවුන්ගේ බලයලත් නියෝජිතයා ඕනෑම වගකීම් හිමිකමක් සඳහා සුදුසු ක්‍රියාමාර්ගය — අළුත්වැඩියාව, ප්‍රතිස්ථාපනය, හෝ වර්තමාන වෙළෙඳ වටිනාකමින් මුදල් ආපසු ලබා දීම — තීරණය කිරීමේ අයිතිය රක්ෂා කරගනී. භාවිත කාලය අනුව ශේෂ ප්‍රමාණ අඩු කළ හැකිය.",
+    t: "Warranty Claim සඳහා අවශ්‍යතා",
+    b: "Warranty claim සඳහා original invoice එක සහ product serial number හෝ warranty sticker තිබේ නම් අවශ්‍ය වේ.",
   },
   {
-    t: "ඉහළ විශේෂාංග සහිත මාදිලි සමඟ ප්‍රතිස්ථාපනය",
-    b: "වගකීම් යටතේ ආවරණය කෙරෙන භාණ්ඩය හිමිකම ඉදිරිපත් කිරීමේ අවස්ථාවේ ලබා ගත නොහැකි නම්, නිෂ්පාදකයා ඉහළ හෝ වැඩිදියුණු කළ විශේෂාංග සහිත මාදිලියකින් ප්‍රතිස්ථාපනය ඉදිරිපත් කළ හැකිය. අගයේ වෙනස ආවරණය කිරීමට පාරිභෝගිකයාගෙන් අතිරේක මුදලක් අවශ්‍ය විය හැකිය.",
+    t: "Support ක්‍රම",
+    b: "AnyDesk වැනි tools හරහා remote support ලබාදිය හැක. On-site support සඳහා issue එක සහ location එක අනුව service charge එකක් අදාළ විය හැක.",
   },
   {
-    t: "මෘදුකාංග භාවිතය පිළිබඳ වියාචනය",
-    b: "නිෂ්පාදිතය මත අනවසර හෝ නීති විරෝධී මෘදුකාංග භාවිතය නිසා ඇති වූ ඕනෑම ගැටළුවක් සඳහා සමාගම වගකීමක් නොදරයි. නිසි ක්‍රියාකාරිත්වය සහතික කිරීමට සහ මෘදුකාංග ගැටළු වළකා ගැනීමට පාරිභෝගිකයන් සැබෑ, බලපත්‍රලාභී මෘදුකාංග භාවිතා කරන ලෙස දැඩිව නිර්දේශ කෙරේ.",
+    t: "Customer වගකීම්",
+    b: "Data backups තබාගැනීම සහ ලබාදුන් guidance අනුව system එක භාවිතා කිරීම customerගේ වගකීමකි.",
   },
 ];
 
@@ -150,16 +124,6 @@ function WSection({ items, title }: { items: typeof W_EN; title: string }) {
           <div style={p({ flex: 1 })}>
             <span style={p({ fontWeight: 700, fontSize: "9px", color: BLACK })}>{w.t}: </span>
             <span style={p({ fontSize: "9px", color: MID, lineHeight: 1.5 })}>{w.b}</span>
-            {"bullets" in w && w.bullets && (
-              <div style={p({ marginTop: "3px", paddingLeft: "4px" })}>
-                {(w.bullets as string[]).map((b, j) => (
-                  <div key={j} style={p({ display: "flex", gap: "5px", marginBottom: "1px" })}>
-                    <span style={p({ fontSize: "9px", color: MID })}>☐</span>
-                    <span style={p({ fontSize: "9px", color: MID })}>{b}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       ))}
