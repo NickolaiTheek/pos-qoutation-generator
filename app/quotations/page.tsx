@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Quotation } from "@/types";
-import { ArrowRight, Copy, Eye, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Copy, Eye, FileText, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -183,6 +183,7 @@ export default function QuotationsPage() {
                         <Button variant="ghost" size="icon" title="Duplicate" onClick={() => handleDuplicate(q.id)}>
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
+                        <Link href={"/quotations/" + q.id + "/advance"}><Button variant="ghost" size="icon" title="Advance Receipt"><Receipt className="h-3.5 w-3.5" /></Button></Link>
                         <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => setConvertTarget(q)}>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>

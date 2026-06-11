@@ -5,7 +5,7 @@ import PrintableQuotation from "@/components/PrintableQuotation";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import type { Quotation } from "@/types";
-import { ArrowLeft, ArrowRight, Pencil, Printer } from "lucide-react";
+import { ArrowLeft, ArrowRight, Pencil, Printer, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -77,6 +77,9 @@ export default function QuotationDetailPage() {
             elementId="printable-quotation"
             filename={"Zero-Pos-Quotation-" + quotation.quotationNumber}
           />
+          <Link href={"/quotations/" + id + "/advance"}>
+            <Button variant="outline" className="gap-2"><Receipt className="h-4 w-4" />Advance Receipt</Button>
+          </Link>
           <Button variant="outline" className="gap-2" onClick={handleConvert}>
             <ArrowRight className="h-4 w-4" />Convert to Invoice
           </Button>
