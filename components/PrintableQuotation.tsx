@@ -24,7 +24,7 @@ const MUTE   = "#6f685d";
 const FAINT  = "#9b9388";
 const LINE   = "#e7e1d6";
 const LINE2  = "#cfc7b8";
-const PAPER  = "#fffdf9";
+const PAPER  = "#ffffff";
 const IVORY  = "#faf7f0";
 const RED    = "#a8442f";
 
@@ -68,7 +68,7 @@ export default function PrintableQuotation({
   return (
     <div
       id="printable-quotation"
-      style={p({ fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif", fontSize: "11px", color: INK, background: "#e8e6e1" })}
+      style={p({ fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif", fontSize: "12px", color: INK, background: "#e8e6e1" })}
     >
     <div
       className="print-page"
@@ -78,24 +78,26 @@ export default function PrintableQuotation({
         minHeight: "297mm",
         margin: "0 auto",
         fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif",
-        fontSize: "11px",
+        fontSize: "12px",
         color: INK,
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
         position: "relative",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
       })}
     >
 
       {/* ── HEADER (Ivory + Ink, hairline rule) ── */}
-      <div style={p({ background: PAPER, padding: "16px 18mm 0 18mm", pageBreakInside: "avoid", WebkitPrintColorAdjust: "exact" })}>
+      <div style={p({ background: PAPER, padding: "16px 13mm 0 13mm", pageBreakInside: "avoid", WebkitPrintColorAdjust: "exact" })}>
         <div style={p({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
           {/* Logo already contains the company name */}
           <img src={logo} alt={businessName} style={p({ height: "70px", width: "auto", objectFit: "contain", display: "block" })} />
 
           <div style={p({ textAlign: "right" })}>
             <div style={p({ fontSize: "21px", fontWeight: 300, letterSpacing: "5px", color: FAINT, textTransform: "uppercase", marginBottom: "5px" })}>Quotation</div>
-            <div style={p({ color: MUTE, fontSize: "9.5px", letterSpacing: "0.2px" })}>
+            <div style={p({ color: MUTE, fontSize: "11.5px", letterSpacing: "0.2px" })}>
               {businessPhone && <span>{businessPhone}</span>}
               {businessPhone && businessEmail && <span style={p({ margin: "0 7px", color: FAINT })}>•</span>}
               {businessEmail && <span>{businessEmail}</span>}
@@ -106,30 +108,30 @@ export default function PrintableQuotation({
       </div>
 
       {/* ── QUOTED FOR + META ── */}
-      <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 18mm 14px 18mm", gap: "24px" })}>
+      <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 13mm 14px 13mm", gap: "24px" })}>
         <div style={p({ flex: "1 1 0" })}>
-          <p style={p({ fontSize: "8px", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 7px 0" })}>Quoted For</p>
+          <p style={p({ fontSize: "10px", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 7px 0" })}>Quoted For</p>
           <p style={p({ fontWeight: 800, fontSize: "14px", margin: "0 0 3px 0", color: INK })}>{quotation.customer?.name ?? "—"}</p>
-          {quotation.customer?.businessName && <p style={p({ fontSize: "10px", color: INK2, margin: "0 0 1px 0" })}>{quotation.customer.businessName}</p>}
-          {quotation.customer?.mobile       && <p style={p({ fontSize: "9.5px", color: MUTE, margin: "0 0 1px 0" })}>T: {quotation.customer.mobile}</p>}
-          {quotation.customer?.email        && <p style={p({ fontSize: "9.5px", color: MUTE, margin: "0 0 1px 0" })}>{quotation.customer.email}</p>}
-          {quotation.customer?.address      && <p style={p({ fontSize: "9.5px", color: FAINT, margin: 0 })}>{quotation.customer.address}</p>}
+          {quotation.customer?.businessName && <p style={p({ fontSize: "11px", color: INK2, margin: "0 0 1px 0" })}>{quotation.customer.businessName}</p>}
+          {quotation.customer?.mobile       && <p style={p({ fontSize: "11.5px", color: MUTE, margin: "0 0 1px 0" })}>T: {quotation.customer.mobile}</p>}
+          {quotation.customer?.email        && <p style={p({ fontSize: "11.5px", color: MUTE, margin: "0 0 1px 0" })}>{quotation.customer.email}</p>}
+          {quotation.customer?.address      && <p style={p({ fontSize: "11.5px", color: FAINT, margin: 0 })}>{quotation.customer.address}</p>}
         </div>
 
         <div style={p({ flex: "0 0 200px", boxSizing: "border-box" })}>
           <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 0 7px 0", borderBottom: `1px solid ${LINE}` })}>
-            <div style={p({ fontSize: "8.5px", fontWeight: 700, color: FAINT, textTransform: "uppercase", letterSpacing: "1.5px" })}>Quotation No.</div>
+            <div style={p({ fontSize: "10.5px", fontWeight: 700, color: FAINT, textTransform: "uppercase", letterSpacing: "1.5px" })}>Quotation No.</div>
             <div style={p({ fontSize: "13px", fontWeight: 800, color: INK })}>{quotation.quotationNumber ?? "—"}</div>
           </div>
           <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0 0 0" })}>
-            <div style={p({ fontSize: "8.5px", fontWeight: 700, color: FAINT, textTransform: "uppercase", letterSpacing: "1.5px" })}>Date</div>
-            <div style={p({ fontSize: "11px", fontWeight: 600, color: INK2 })}>{quotation.date ? formatDate(quotation.date) : "—"}</div>
+            <div style={p({ fontSize: "10.5px", fontWeight: 700, color: FAINT, textTransform: "uppercase", letterSpacing: "1.5px" })}>Date</div>
+            <div style={p({ fontSize: "12px", fontWeight: 600, color: INK2 })}>{quotation.date ? formatDate(quotation.date) : "—"}</div>
           </div>
         </div>
       </div>
 
       {/* ── ITEMS ── */}
-      <div style={p({ padding: "0 18mm 0 18mm", flex: 1 })}>
+      <div style={p({ padding: "0 13mm 0 13mm", flex: 1 })}>
         {categoryOrder.map((cat) => {
           const catItems    = grouped[cat];
           const catSubtotal = catItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitPrice ?? 0), 0);
@@ -138,22 +140,22 @@ export default function PrintableQuotation({
 
           return (
             <div key={cat} style={p({ marginBottom: "16px" })}>
-              <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "10px" })}>
+              <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "11px" })}>
                 <thead>
                   <tr>
-                    <th style={p({ padding: "0 9px 6px 0", textAlign: "left",   color: INK,  fontWeight: 800, width: "53%", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>{cat}</th>
-                    <th style={p({ padding: "0 9px 6px 9px", textAlign: "center", color: FAINT, fontWeight: 700, width: "9%",  fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Qty</th>
-                    <th style={p({ padding: "0 9px 6px 9px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Unit Price</th>
-                    <th style={p({ padding: "0 0 6px 9px", textAlign: "right",   color: FAINT, fontWeight: 700, width: "19%", fontSize: "8px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Total</th>
+                    <th style={p({ padding: "0 9px 6px 0", textAlign: "left",   color: INK,  fontWeight: 800, width: "53%", fontSize: "12px", letterSpacing: "1.5px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>{cat}</th>
+                    <th style={p({ padding: "0 9px 6px 9px", textAlign: "center", color: FAINT, fontWeight: 700, width: "9%",  fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Qty</th>
+                    <th style={p({ padding: "0 9px 6px 9px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Unit Price</th>
+                    <th style={p({ padding: "0 0 6px 9px", textAlign: "right",   color: FAINT, fontWeight: 700, width: "19%", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {catItems.map((item) => (
                     <tr key={item.id} style={p({ borderBottom: `1px solid ${LINE}` })}>
                       <td style={p({ padding: "9px 9px 9px 0", verticalAlign: "top" })}>
-                        <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "10.5px" })}>{sanitizeName(item.name)}</span>
-                        {item.description && <span style={p({ fontSize: "9.5px", color: MUTE, display: "block", marginTop: "2px", lineHeight: 1.5 })}>{renderBold(item.description)}</span>}
-                        {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "9px", color: FAINT, display: "block", marginTop: "2px" })}>{item.warranty}</span>}
+                        <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "11.5px" })}>{sanitizeName(item.name)}</span>
+                        {item.description && <span style={p({ fontSize: "11.5px", color: MUTE, display: "block", marginTop: "2px", lineHeight: 1.5 })}>{renderBold(item.description)}</span>}
+                        {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "11px", color: FAINT, display: "block", marginTop: "2px" })}>{item.warranty}</span>}
                       </td>
                       <td style={p({ padding: "9px 9px", textAlign: "center", verticalAlign: "top", color: INK2, fontWeight: 600 })}>{item.quantity ? item.quantity : <span style={p({ color: FAINT })}>—</span>}</td>
                       <td style={p({ padding: "9px 9px", textAlign: "right", verticalAlign: "top", color: MUTE, whiteSpace: "nowrap" })}>
@@ -169,7 +171,7 @@ export default function PrintableQuotation({
 
               {/* Category totals */}
               <div style={p({ display: "flex", justifyContent: "flex-end", marginTop: "2px" })}>
-                <table style={p({ borderCollapse: "collapse", fontSize: "9.5px", minWidth: "230px" })}>
+                <table style={p({ borderCollapse: "collapse", fontSize: "11.5px", minWidth: "230px" })}>
                   <tbody>
                     {catDiscount > 0 && (
                       <>
@@ -184,8 +186,8 @@ export default function PrintableQuotation({
                       </>
                     )}
                     <tr style={p({ borderTop: `1px solid ${LINE2}` })}>
-                      <td style={p({ padding: "5px 14px 0 8px", fontWeight: 700, color: INK, textTransform: "uppercase", letterSpacing: "1px", fontSize: "9px" })}>{cat} Total</td>
-                      <td style={p({ padding: "5px 0 0 0", fontWeight: 800, color: INK, textAlign: "right", fontSize: "11px" })}>{formatCurrency(catTotal)}</td>
+                      <td style={p({ padding: "5px 14px 0 8px", fontWeight: 700, color: INK, textTransform: "uppercase", letterSpacing: "1px", fontSize: "11px" })}>{cat} Total</td>
+                      <td style={p({ padding: "5px 0 0 0", fontWeight: 800, color: INK, textAlign: "right", fontSize: "12px" })}>{formatCurrency(catTotal)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -197,7 +199,7 @@ export default function PrintableQuotation({
         {/* ── GRAND TOTAL — outlined ── */}
         <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0" })}>
           <div style={p({ border: `1.5px solid ${INK}`, borderRadius: "4px", padding: "11px 18px", display: "flex", alignItems: "center", gap: "36px", minWidth: "270px", background: IVORY })}>
-            <span style={p({ color: MUTE, fontSize: "10px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Grand Total</span>
+            <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Grand Total</span>
             <span style={p({ color: INK, fontSize: "17px", fontWeight: 800, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
           </div>
         </div>
@@ -205,17 +207,17 @@ export default function PrintableQuotation({
         {/* ── NOTE ── */}
         {note && (
           <div style={p({ background: IVORY, borderLeft: `2px solid ${LINE2}`, padding: "10px 14px", marginBottom: "14px", borderRadius: "0 4px 4px 0" })}>
-            <p style={p({ fontWeight: 700, fontSize: "8.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 5px 0", letterSpacing: "1.5px" })}>Note</p>
-            <p style={p({ fontSize: "10px", lineHeight: 1.6, color: INK2, margin: 0 })}>{note}</p>
+            <p style={p({ fontWeight: 700, fontSize: "10.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 5px 0", letterSpacing: "1.5px" })}>Note</p>
+            <p style={p({ fontSize: "11px", lineHeight: 1.6, color: INK2, margin: 0 })}>{note}</p>
           </div>
         )}
 
       </div>
 
       {/* ── FOOTER ── */}
-      <div style={p({ padding: "10px 18mm 12px 18mm", borderTop: `1px solid ${INK}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", pageBreakInside: "avoid" })}>
-        <span style={p({ color: FAINT, fontSize: "9px", letterSpacing: "0.5px" })}>{businessName}</span>
-        <span style={p({ color: MUTE, fontSize: "9px" })}>
+      <div style={p({ padding: "10px 13mm 12px 13mm", borderTop: `1px solid ${INK}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", pageBreakInside: "avoid" })}>
+        <span style={p({ color: FAINT, fontSize: "11px", letterSpacing: "0.5px" })}>{businessName}</span>
+        <span style={p({ color: MUTE, fontSize: "11px" })}>
           {businessPhone && <>{businessPhone}</>}
           {businessPhone && businessEmail && <span style={p({ margin: "0 8px", color: FAINT })}>•</span>}
           {businessEmail && <>{businessEmail}</>}

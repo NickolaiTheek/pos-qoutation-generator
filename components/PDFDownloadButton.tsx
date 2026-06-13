@@ -37,10 +37,12 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
         pageEls = Array.from(element.querySelectorAll(':scope > div')) as HTMLElement[];
       }
 
-      // A4 dimensions in mm with 10mm margins
+      // A4 dimensions in mm — full bleed (each page has its own 18mm
+      // internal padding, so no extra outer margin is needed; this lets the
+      // ivory paper fill the whole sheet edge-to-edge and keeps fonts crisp).
       const PAGE_W = 210;
       const PAGE_H = 297;
-      const MARGIN = 10;
+      const MARGIN = 0;
       const contentW = PAGE_W - MARGIN * 2;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
