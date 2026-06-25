@@ -749,7 +749,7 @@ function LeadsTab() {
   );
 }
 
-// ─── DEBTS TAB ───────────────────────────────────────────────────────────────
+// ─── RECEIVABLES (DEBTS) TAB ─────────────────────────────────────────────────
 const DEBT_STATUS_COLORS: Record<string, string> = {
   Pending: "bg-red-100 text-red-700",
   "Partially Paid": "bg-yellow-100 text-yellow-700",
@@ -765,6 +765,14 @@ function DebtsTab() {
   const [error, setError] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const today = new Date().toISOString().split("T")[0];
+
+  // Record Payment dialog state
+  const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<DebtRecord | null>(null);
+  const [payAmount, setPayAmount] = useState("");
+  const [payNote, setPayNote] = useState("");
+  const [payFull, setPayFull] = useState(false);
+  const [paying, setPaying] = useState(false);
 
   const [form, setForm] = useState({ customerName: "", customerMobile: "", description: "", totalAmount: "", paidAmount: "0", dueDate: "", notes: "" });
 
@@ -794,6 +802,14 @@ function DebtsTab() {
     setDialogOpen(true);
   };
 
+  const openPayment = (d: DebtRecord) => {
+    setPayTarget(d);
+    setPayAmount("");
+    setPayNote("");
+    setPayFull(false);
+    setPayDialogOpen(true);
+  };
+
   const handleSave = async () => {
     if (!form.customerName.trim()) { setError("Customer name is required."); return; }
     if (!form.totalAmount || isNaN(Number(form.totalAmount))) { setError("Valid total amount is required."); return; }
@@ -809,25 +825,66 @@ function DebtsTab() {
     } finally { setSaving(false); }
   };
 
+  const handleRecordPayment = async () => {
+    if (!payTarget) return;
+    const addAmt = payFull ? (payTarget.totalAmount - payTarget.paidAmount) : parseFloat(payAmount);
+    if (!payFull && (!payAmount || isNaN(addAmt) || addAmt <= 0)) return;
+    setPaying(true);
+    try {
+      const newPaid = Math.min(payTarget.totalAmount, payTarget.paidAmount + addAmt);
+      const noteStr = [payTarget.notes, payNote].filter(Boolean).join(" | ");
+      const body = {
+        customerName: payTarget.customerName,
+        customerMobile: payTarget.customerMobile ?? "",
+        description: payTarget.description ?? "",
+        totalAmount: payTarget.totalAmount,
+        paidAmount: newPaid,
+        dueDate: payTarget.dueDate ?? undefined,
+        notes: noteStr,
+      };
+      await fetch(`/api/debts/${payTarget.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      setPayDialogOpen(false);
+      fetchDebts();
+    } finally { setPaying(false); }
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this debt record?")) return;
+    if (!confirm("Delete this receivable record?")) return;
     await fetch(`/api/debts/${id}`, { method: "DELETE" });
     fetchDebts();
   };
 
-  const totalOutstanding = debts.filter(d => d.status !== "Paid").reduce((s, d) => s + (d.totalAmount - d.paidAmount), 0);
+  const totalOwed = debts.reduce((s, d) => s + d.totalAmount, 0);
+  const totalReceived = debts.reduce((s, d) => s + d.paidAmount, 0);
+  const totalOutstanding = totalOwed - totalReceived;
 
   return (
     <div className="space-y-4">
+      {/* Summary row */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-center">
+          <p className="text-xs text-gray-400 mb-1">Total Owed</p>
+          <p className="text-base font-bold text-gray-800">{formatCurrency(totalOwed)}</p>
+        </div>
+        <div className="rounded-lg border border-green-100 bg-green-50 p-3 text-center">
+          <p className="text-xs text-gray-400 mb-1">Total Received</p>
+          <p className="text-base font-bold text-green-600">{formatCurrency(totalReceived)}</p>
+        </div>
+        <div className="rounded-lg border border-orange-100 bg-orange-50 p-3 text-center">
+          <p className="text-xs text-gray-400 mb-1">Still Outstanding</p>
+          <p className="text-base font-bold text-orange-600">{formatCurrency(totalOutstanding)}</p>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <p className="text-sm text-gray-500">{debts.length} records · Outstanding: <span className="font-semibold text-orange-600">{formatCurrency(totalOutstanding)}</span></p>
+          <p className="text-sm text-gray-500">{debts.length} records</p>
           <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">All</option>
             {DEBT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Debt</Button>
+        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Receivable</Button>
       </div>
 
       <Card>
@@ -835,14 +892,14 @@ function DebtsTab() {
           {loading ? (
             <div className="p-8 text-center text-gray-400">Loading...</div>
           ) : debts.length === 0 ? (
-            <div className="p-8 text-center text-gray-400">No debt records found.</div>
+            <div className="p-8 text-center text-gray-400">No receivable records found.</div>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Paid</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Received</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Balance</th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-4 py-3" />
@@ -851,6 +908,7 @@ function DebtsTab() {
               <tbody>
                 {debts.map(d => {
                   const balance = d.totalAmount - d.paidAmount;
+                  const pct = d.totalAmount > 0 ? Math.round((d.paidAmount / d.totalAmount) * 100) : 0;
                   return (
                     <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                       <td className="px-4 py-3">
@@ -858,15 +916,31 @@ function DebtsTab() {
                         {d.customerMobile && <p className="text-xs text-gray-400">{d.customerMobile}</p>}
                         {d.description && <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{d.description}</p>}
                         {d.dueDate && <p className="text-xs text-orange-500 mt-0.5">Due: {new Date(d.dueDate).toLocaleDateString("en-GB")}</p>}
+                        {/* Progress bar */}
+                        <div className="mt-1.5 h-1.5 w-full max-w-35 rounded-full bg-gray-100 overflow-hidden">
+                          <div className={`h-full rounded-full ${pct >= 100 ? "bg-green-500" : pct > 0 ? "bg-yellow-400" : "bg-red-300"}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-xs text-gray-300 mt-0.5">{pct}% received</p>
                       </td>
-                      <td className="px-4 py-3 text-right font-medium text-gray-700">{formatCurrency(d.totalAmount)}</td>
-                      <td className="px-4 py-3 text-right text-green-600 font-medium">{formatCurrency(d.paidAmount)}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-orange-600">{formatCurrency(balance)}</td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-700 whitespace-nowrap">{formatCurrency(d.totalAmount)}</td>
+                      <td className="px-4 py-3 text-right text-green-600 font-medium whitespace-nowrap">{formatCurrency(d.paidAmount)}</td>
+                      <td className="px-4 py-3 text-right font-bold whitespace-nowrap">
+                        <span className={balance <= 0 ? "text-green-600" : "text-orange-600"}>{formatCurrency(balance)}</span>
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${DEBT_STATUS_COLORS[d.status] ?? "bg-gray-100 text-gray-700"}`}>{d.status}</span>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1 justify-end">
+                          {d.status !== "Paid" && (
+                            <Button
+                              size="sm"
+                              className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 gap-1"
+                              onClick={() => openPayment(d)}
+                            >
+                              + Payment
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => openEdit(d)}><Pencil className="h-3.5 w-3.5" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(d.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>
                         </div>
@@ -880,9 +954,70 @@ function DebtsTab() {
         </CardContent>
       </Card>
 
+      {/* Record Payment dialog */}
+      <Dialog open={payDialogOpen} onOpenChange={setPayDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Record Payment</DialogTitle>
+          </DialogHeader>
+          {payTarget && (
+            <div className="space-y-4 pt-1">
+              <div className="rounded-lg bg-gray-50 border border-gray-100 p-3 space-y-1 text-sm">
+                <p className="font-semibold text-gray-800">{payTarget.customerName}</p>
+                <div className="flex justify-between text-gray-500">
+                  <span>Total</span><span className="font-medium text-gray-700">{formatCurrency(payTarget.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-gray-500">
+                  <span>Already received</span><span className="font-medium text-green-600">{formatCurrency(payTarget.paidAmount)}</span>
+                </div>
+                <div className="flex justify-between border-t border-gray-200 pt-1 font-semibold">
+                  <span>Remaining balance</span><span className="text-orange-600">{formatCurrency(payTarget.totalAmount - payTarget.paidAmount)}</span>
+                </div>
+              </div>
+
+              {/* Full payment toggle */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPayFull(f => !f)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors w-full ${payFull ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-500"}`}
+                >
+                  <span className={`w-4 h-4 rounded border-2 flex items-center justify-center text-xs ${payFull ? "border-green-500 bg-green-500 text-white" : "border-gray-300"}`}>{payFull ? "✓" : ""}</span>
+                  Full payment — receive entire balance ({formatCurrency(payTarget.totalAmount - payTarget.paidAmount)})
+                </button>
+              </div>
+
+              {!payFull && (
+                <div className="space-y-1.5">
+                  <Label>Amount Received (LKR) *</Label>
+                  <Input
+                    type="number" min="0" step="0.01"
+                    value={payAmount}
+                    onChange={e => setPayAmount(e.target.value)}
+                    placeholder="e.g. 30000 (advance)"
+                    autoFocus
+                  />
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <Label>Note (optional)</Label>
+                <Input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="e.g. Advance, Bank transfer" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <Button variant="outline" onClick={() => setPayDialogOpen(false)} className="flex-1">Cancel</Button>
+                <Button onClick={handleRecordPayment} disabled={paying} className="flex-1 bg-green-600 hover:bg-green-700">
+                  {paying ? "Saving..." : "Record Payment"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{editDebt ? "Edit Debt Record" : "Add Debt Record"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editDebt ? "Edit Receivable" : "Add Receivable"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             {error && <p className="text-sm text-red-500">{error}</p>}
             <div className="grid grid-cols-2 gap-4">
@@ -905,7 +1040,7 @@ function DebtsTab() {
                 <Input type="number" min="0" step="0.01" value={form.totalAmount} onChange={e => setForm(f => ({ ...f, totalAmount: e.target.value }))} placeholder="0.00" />
               </div>
               <div className="space-y-1.5">
-                <Label>Amount Paid (LKR)</Label>
+                <Label>Initial Payment (LKR)</Label>
                 <Input type="number" min="0" step="0.01" value={form.paidAmount} onChange={e => setForm(f => ({ ...f, paidAmount: e.target.value }))} placeholder="0.00" />
               </div>
             </div>
@@ -919,7 +1054,7 @@ function DebtsTab() {
             </div>
             <div className="flex gap-3 pt-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">Cancel</Button>
-              <Button onClick={handleSave} disabled={saving} className="flex-1">{saving ? "Saving..." : editDebt ? "Update" : "Add Debt"}</Button>
+              <Button onClick={handleSave} disabled={saving} className="flex-1">{saving ? "Saving..." : editDebt ? "Update" : "Add Receivable"}</Button>
             </div>
           </div>
         </DialogContent>
@@ -941,17 +1076,20 @@ export default function BusinessPage() {
   const handleExportAll = async () => {
     setExporting(true);
     try {
-      const [cashIns, expenses] = await Promise.all([
+      const [cashIns, expenses, debts] = await Promise.all([
         fetch("/api/cash-ins").then(r => r.json()) as Promise<CashIn[]>,
         fetch("/api/expenses").then(r => r.json()) as Promise<Expense[]>,
+        fetch("/api/debts").then(r => r.json()) as Promise<DebtRecord[]>,
       ]);
 
       const totalCashIn = cashIns.reduce((s, i) => s + i.amount, 0);
       const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-      const balance = totalCashIn - totalExpenses;
+      const totalOwed = debts.reduce((s, d) => s + d.totalAmount, 0);
+      const totalReceived = debts.reduce((s, d) => s + d.paidAmount, 0);
+      const totalOutstanding = totalOwed - totalReceived;
 
       const PERSONS_LIST = ["Theekshana", "Praveen"];
-      const summaryRows = PERSONS_LIST.map(name => {
+      const partnerRows = PERSONS_LIST.map(name => {
         const ci = cashIns.filter(i => i.person === name).reduce((s, i) => s + i.amount, 0);
         const ex = expenses.filter(e => e.person === name).reduce((s, e) => s + e.amount, 0);
         return [name, ci, ex, ci - ex];
@@ -966,18 +1104,41 @@ export default function BusinessPage() {
       const lines: string[] = [
         row(["ZERO POS SOLUTIONS — FINANCIAL REPORT", `Exported: ${new Date().toLocaleDateString("en-GB")}`]),
         "",
-        row(["SUMMARY"]),
-        row(["", "Cash In (LKR)", "Expenses (LKR)", "Balance (LKR)"]),
-        ...summaryRows.map(r => row(r)),
-        row(["TOTAL", totalCashIn, totalExpenses, balance]),
+        // ── Partner summary ──
+        row(["PARTNER SUMMARY (Cash In − Expenses)"]),
+        row(["Partner", "Cash In (LKR)", "Expenses (LKR)", "Balance (LKR)"]),
+        ...partnerRows.map(r => row(r)),
+        row(["TOTAL", totalCashIn, totalExpenses, totalCashIn - totalExpenses]),
         "",
+        // ── Receivables summary ──
+        row(["RECEIVABLES SUMMARY"]),
+        row(["Total Owed (LKR)", "Total Received (LKR)", "Outstanding (LKR)"]),
+        row([totalOwed, totalReceived, totalOutstanding]),
+        "",
+        // ── Cash In records ──
         row(["CASH IN RECORDS"]),
         row(["Title", "Person", "Date", "Amount (LKR)", "Description"]),
         ...cashIns.map(i => row([i.title, i.person ?? "", new Date(i.date).toLocaleDateString("en-GB"), i.amount, i.description ?? ""])),
         "",
+        // ── Expenses records ──
         row(["EXPENSES RECORDS"]),
         row(["Title", "Person", "Category", "Date", "Amount (LKR)", "Description"]),
         ...expenses.map(e => row([e.title, e.person ?? "", e.category, new Date(e.date).toLocaleDateString("en-GB"), e.amount, e.description ?? ""])),
+        "",
+        // ── Receivables records ──
+        row(["RECEIVABLES RECORDS"]),
+        row(["Customer", "Mobile", "Description", "Total (LKR)", "Received (LKR)", "Balance (LKR)", "Status", "Due Date", "Notes"]),
+        ...debts.map(d => row([
+          d.customerName,
+          d.customerMobile ?? "",
+          d.description ?? "",
+          d.totalAmount,
+          d.paidAmount,
+          d.totalAmount - d.paidAmount,
+          d.status,
+          d.dueDate ? new Date(d.dueDate).toLocaleDateString("en-GB") : "",
+          d.notes ?? "",
+        ])),
       ];
 
       const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
