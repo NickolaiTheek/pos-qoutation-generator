@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const [expenseSnap, invoiceSnap, debtSnap] = await Promise.all([
+    const [expenseSnap, invoiceSnap, debtSnap, cashInSnap] = await Promise.all([
       getDocs(collection(db, "expenses")),
       getDocs(query(collection(db, "invoices"), where("status", "==", "Paid"))),
       getDocs(collection(db, "debt_records")),
+      getDocs(collection(db, "cash_ins")),
     ]);
 
     const totalExpenses = expenseSnap.docs.reduce(
@@ -24,28 +25,42 @@ export async function GET() {
     const outstandingDebt = totalDebt - totalDebtPaid;
 
     const categoryMap: Record<string, number> = {};
-    const personMap: Record<string, number> = {};
+    const expensePersonMap: Record<string, number> = {};
     for (const d of expenseSnap.docs) {
       const { category, amount, person } = d.data() as { category: string; amount: number; person?: string };
       categoryMap[category] = (categoryMap[category] ?? 0) + amount;
       const p = person ?? "Unknown";
-      personMap[p] = (personMap[p] ?? 0) + amount;
+      expensePersonMap[p] = (expensePersonMap[p] ?? 0) + amount;
     }
+
+    const cashInPersonMap: Record<string, number> = {};
+    for (const d of cashInSnap.docs) {
+      const { amount, person } = d.data() as { amount: number; person?: string };
+      const p = person ?? "Unknown";
+      cashInPersonMap[p] = (cashInPersonMap[p] ?? 0) + amount;
+    }
+    const totalCashIn = cashInSnap.docs.reduce((s, d) => s + ((d.data().amount as number) ?? 0), 0);
+
     const expenseByCategory = Object.entries(categoryMap)
       .map(([category, total]) => ({ category, total }))
       .sort((a, b) => b.total - a.total);
-    const expenseByPerson = Object.entries(personMap)
+    const expenseByPerson = Object.entries(expensePersonMap)
+      .map(([person, total]) => ({ person, total }))
+      .sort((a, b) => b.total - a.total);
+    const cashInByPerson = Object.entries(cashInPersonMap)
       .map(([person, total]) => ({ person, total }))
       .sort((a, b) => b.total - a.total);
 
     return NextResponse.json({
       totalExpenses,
       totalRevenue,
+      totalCashIn,
       totalDebt,
       totalDebtPaid,
       outstandingDebt,
       expenseByCategory,
       expenseByPerson,
+      cashInByPerson,
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch business summary" }, { status: 500 });

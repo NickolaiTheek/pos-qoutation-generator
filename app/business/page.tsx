@@ -6,8 +6,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/lib/utils";
-import type { DebtRecord, Expense, Lead } from "@/types";
+import type { CashIn, DebtRecord, Expense, Lead } from "@/types";
 import {
+    ArrowDownCircle,
+    ArrowUpCircle,
     CreditCard,
     Pencil,
     Plus,
@@ -26,16 +28,18 @@ type Person = (typeof PERSONS)[number];
 const LEAD_STATUSES = ["New", "Contacted", "Interested", "Quoted", "Won", "Lost"];
 const DEBT_STATUSES = ["Pending", "Partially Paid", "Paid"];
 
-type Tab = "overview" | "expenses" | "leads" | "debts";
+type Tab = "overview" | "expenses" | "cashins" | "leads" | "debts";
 
 interface Summary {
   totalExpenses: number;
   totalRevenue: number;
+  totalCashIn: number;
   totalDebt: number;
   totalDebtPaid: number;
   outstandingDebt: number;
   expenseByCategory: { category: string; total: number }[];
   expenseByPerson: { person: string; total: number }[];
+  cashInByPerson: { person: string; total: number }[];
 }
 
 // ─── OVERVIEW TAB ────────────────────────────────────────────────────────────
@@ -91,33 +95,50 @@ function OverviewTab({ summary }: { summary: Summary | null }) {
         </Card>
       </div>
 
-      {((summary.expenseByPerson ?? []).length > 0 || summary.expenseByCategory.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {(summary.expenseByPerson ?? []).length > 0 && (
-            <Card>
-              <CardHeader><CardTitle className="text-sm">Expenses by Partner</CardTitle></CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {(summary.expenseByPerson ?? []).map(e => (
-                    <div key={e.person} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
-                          {e.person.charAt(0)}
-                        </span>
-                        <span className="text-sm font-medium text-gray-700">{e.person}</span>
+      {/* Per-person balance: Cash In vs Expenses */}
+      {(["Theekshana", "Praveen"] as const).some(name =>
+        (summary.cashInByPerson ?? []).some(c => c.person === name) ||
+        (summary.expenseByPerson ?? []).some(e => e.person === name)
+      ) && (
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Partner Balance (Cash In − Expenses)</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {(["Theekshana", "Praveen"] as const).map(name => {
+                const cashIn = (summary.cashInByPerson ?? []).find(c => c.person === name)?.total ?? 0;
+                const expense = (summary.expenseByPerson ?? []).find(e => e.person === name)?.total ?? 0;
+                const balance = cashIn - expense;
+                const color = name === "Theekshana" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700";
+                return (
+                  <div key={name} className="rounded-lg border border-gray-100 p-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${color}`}>{name.charAt(0)}</span>
+                      <span className="text-sm font-semibold text-gray-800">{name}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-green-50 rounded p-2">
+                        <p className="text-xs text-gray-400 mb-0.5">Cash In</p>
+                        <p className="text-sm font-semibold text-green-600">{formatCurrency(cashIn)}</p>
                       </div>
-                      <div className="text-right">
-                        <span className="text-sm font-semibold text-red-600">{formatCurrency(e.total)}</span>
-                        {summary.totalExpenses > 0 && (
-                          <p className="text-xs text-gray-400">{Math.round((e.total / summary.totalExpenses) * 100)}%</p>
-                        )}
+                      <div className="bg-red-50 rounded p-2">
+                        <p className="text-xs text-gray-400 mb-0.5">Expenses</p>
+                        <p className="text-sm font-semibold text-red-600">{formatCurrency(expense)}</p>
+                      </div>
+                      <div className={`rounded p-2 ${balance >= 0 ? "bg-blue-50" : "bg-orange-50"}`}>
+                        <p className="text-xs text-gray-400 mb-0.5">Balance</p>
+                        <p className={`text-sm font-bold ${balance >= 0 ? "text-blue-600" : "text-orange-600"}`}>{formatCurrency(balance)}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {((summary.expenseByPerson ?? []).length > 0 || summary.expenseByCategory.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {summary.expenseByCategory.length > 0 && (
             <Card>
               <CardHeader><CardTitle className="text-sm">Expenses by Category</CardTitle></CardHeader>
@@ -330,6 +351,172 @@ function ExpensesTab() {
             <div className="flex gap-3 pt-2">
               <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">Cancel</Button>
               <Button onClick={handleSave} disabled={saving} className="flex-1">{saving ? "Saving..." : editExpense ? "Update" : "Add Expense"}</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ─── CASH IN TAB ─────────────────────────────────────────────────────────────
+function CashInTab() {
+  const [items, setItems] = useState<CashIn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<CashIn | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [form, setForm] = useState({ title: "", amount: "", person: "Theekshana" as Person, description: "", date: today });
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/cash-ins");
+      setItems(await res.json());
+    } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  const openAdd = () => {
+    setEditItem(null);
+    setForm({ title: "", amount: "", person: "Theekshana", description: "", date: today });
+    setError("");
+    setDialogOpen(true);
+  };
+
+  const openEdit = (item: CashIn) => {
+    setEditItem(item);
+    setForm({ title: item.title, amount: String(item.amount), person: (item.person ?? "Theekshana") as Person, description: item.description ?? "", date: item.date.split("T")[0] });
+    setError("");
+    setDialogOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { setError("Title is required."); return; }
+    if (!form.amount || isNaN(Number(form.amount))) { setError("Valid amount is required."); return; }
+    setSaving(true); setError("");
+    try {
+      const body = { title: form.title.trim(), amount: parseFloat(form.amount), person: form.person, description: form.description, date: new Date(form.date).toISOString() };
+      const url = editItem ? `/api/cash-ins/${editItem.id}` : "/api/cash-ins";
+      const method = editItem ? "PUT" : "POST";
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!res.ok) { const d = await res.json(); setError(d.error ?? "Failed to save."); return; }
+      setDialogOpen(false);
+      fetchItems();
+    } finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this cash in record?")) return;
+    await fetch(`/api/cash-ins/${id}`, { method: "DELETE" });
+    fetchItems();
+  };
+
+  const total = items.reduce((s, i) => s + i.amount, 0);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{items.length} records · Total: <span className="font-semibold text-green-600">{formatCurrency(total)}</span></p>
+        <Button onClick={openAdd} className="gap-2 bg-green-600 hover:bg-green-700"><Plus className="h-4 w-4" /> Add Cash In</Button>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-8 text-center text-gray-400">Loading...</div>
+          ) : items.length === 0 ? (
+            <div className="p-8 text-center text-gray-400">No cash in records yet.</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Person</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Date</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {items.map(item => (
+                  <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-gray-800">{item.title}</p>
+                      {item.description && <p className="text-xs text-gray-400 mt-0.5">{item.description}</p>}
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        item.person === "Theekshana" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                      }`}>{item.person}</span>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 hidden lg:table-cell text-xs">{new Date(item.date).toLocaleDateString("en-GB")}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-green-600">{formatCurrency(item.amount)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(item)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editItem ? "Edit Cash In" : "Add Cash In"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            {error && <p className="text-sm text-red-500">{error}</p>}
+            <div className="space-y-1.5">
+              <Label>Title *</Label>
+              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Client payment, investment" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Received by (Partner) *</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {PERSONS.map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, person: p }))}
+                    className={`h-10 rounded-lg border-2 text-sm font-medium transition-colors ${
+                      form.person === p
+                        ? p === "Theekshana"
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-purple-500 bg-purple-50 text-purple-700"
+                        : "border-gray-200 text-gray-500 hover:border-gray-300"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Amount (LKR) *</Label>
+                <Input type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Date</Label>
+                <Input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description (optional)</Label>
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Source or details..." />
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" onClick={() => setDialogOpen(false)} className="flex-1">Cancel</Button>
+              <Button onClick={handleSave} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-700">{saving ? "Saving..." : editItem ? "Update" : "Add Cash In"}</Button>
             </div>
           </div>
         </DialogContent>
@@ -703,7 +890,8 @@ export default function BusinessPage() {
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview", icon: <TrendingUp className="h-4 w-4" /> },
-    { key: "expenses", label: "Expenses", icon: <TrendingDown className="h-4 w-4" /> },
+    { key: "cashins", label: "Cash In", icon: <ArrowDownCircle className="h-4 w-4" /> },
+    { key: "expenses", label: "Expenses", icon: <ArrowUpCircle className="h-4 w-4" /> },
     { key: "leads", label: "Leads", icon: <Target className="h-4 w-4" /> },
     { key: "debts", label: "Debts", icon: <CreditCard className="h-4 w-4" /> },
   ];
@@ -731,6 +919,7 @@ export default function BusinessPage() {
 
       {/* Tab Content */}
       {activeTab === "overview" && <OverviewTab summary={summary} />}
+      {activeTab === "cashins" && <CashInTab />}
       {activeTab === "expenses" && <ExpensesTab />}
       {activeTab === "leads" && <LeadsTab />}
       {activeTab === "debts" && <DebtsTab />}

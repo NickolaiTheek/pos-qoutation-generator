@@ -134,6 +134,17 @@ export interface Expense {
   updatedAt: string;
 }
 
+export interface CashIn {
+  id: string;
+  title: string;
+  amount: number;
+  person: "Theekshana" | "Praveen";
+  description?: string | null;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Lead {
   id: string;
   name: string;
