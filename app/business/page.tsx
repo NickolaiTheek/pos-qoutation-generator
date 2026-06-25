@@ -771,7 +771,7 @@ function DebtsTab() {
   const [payTarget, setPayTarget] = useState<DebtRecord | null>(null);
   const [payAmount, setPayAmount] = useState("");
   const [payNote, setPayNote] = useState("");
-  const [payFull, setPayFull] = useState(false);
+  const [payType, setPayType] = useState<"advance" | "full">("advance");
   const [paying, setPaying] = useState(false);
 
   const [form, setForm] = useState({ customerName: "", customerMobile: "", description: "", totalAmount: "", paidAmount: "0", dueDate: "", notes: "" });
@@ -806,7 +806,7 @@ function DebtsTab() {
     setPayTarget(d);
     setPayAmount("");
     setPayNote("");
-    setPayFull(false);
+    setPayType("advance");
     setPayDialogOpen(true);
   };
 
@@ -827,8 +827,8 @@ function DebtsTab() {
 
   const handleRecordPayment = async () => {
     if (!payTarget) return;
-    const addAmt = payFull ? (payTarget.totalAmount - payTarget.paidAmount) : parseFloat(payAmount);
-    if (!payFull && (!payAmount || isNaN(addAmt) || addAmt <= 0)) return;
+    const addAmt = payType === "full" ? (payTarget.totalAmount - payTarget.paidAmount) : parseFloat(payAmount);
+    if (payType === "advance" && (!payAmount || isNaN(addAmt) || addAmt <= 0)) return;
     setPaying(true);
     try {
       const newPaid = Math.min(payTarget.totalAmount, payTarget.paidAmount + addAmt);
@@ -975,28 +975,33 @@ function DebtsTab() {
                 </div>
               </div>
 
-              {/* Full payment toggle */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPayFull(f => !f)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm font-medium transition-colors w-full ${payFull ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-500"}`}
+              {/* Payment type dropdown */}
+              <div className="space-y-1.5">
+                <Label>Payment Type *</Label>
+                <select
+                  value={payType}
+                  onChange={e => setPayType(e.target.value as "advance" | "full")}
+                  className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <span className={`w-4 h-4 rounded border-2 flex items-center justify-center text-xs ${payFull ? "border-green-500 bg-green-500 text-white" : "border-gray-300"}`}>{payFull ? "✓" : ""}</span>
-                  Full payment — receive entire balance ({formatCurrency(payTarget.totalAmount - payTarget.paidAmount)})
-                </button>
+                  <option value="advance">Advance Payment (partial — more money expected)</option>
+                  <option value="full">Full Payment (complete — no balance remaining)</option>
+                </select>
               </div>
 
-              {!payFull && (
+              {payType === "advance" ? (
                 <div className="space-y-1.5">
                   <Label>Amount Received (LKR) *</Label>
                   <Input
                     type="number" min="0" step="0.01"
                     value={payAmount}
                     onChange={e => setPayAmount(e.target.value)}
-                    placeholder="e.g. 30000 (advance)"
+                    placeholder="e.g. 30,000"
                     autoFocus
                   />
+                </div>
+              ) : (
+                <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-700 font-medium">
+                  ✓ Full balance of {formatCurrency(payTarget.totalAmount - payTarget.paidAmount)} will be recorded as received.
                 </div>
               )}
               <div className="space-y-1.5">
