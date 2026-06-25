@@ -932,10 +932,65 @@ function DebtsTab() {
 export default function BusinessPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetch("/api/business/summary").then(r => r.json()).then(setSummary);
-  }, [activeTab]); // refresh summary on tab change
+  }, [activeTab]);
+
+  const handleExportAll = async () => {
+    setExporting(true);
+    try {
+      const [cashIns, expenses] = await Promise.all([
+        fetch("/api/cash-ins").then(r => r.json()) as Promise<CashIn[]>,
+        fetch("/api/expenses").then(r => r.json()) as Promise<Expense[]>,
+      ]);
+
+      const totalCashIn = cashIns.reduce((s, i) => s + i.amount, 0);
+      const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+      const balance = totalCashIn - totalExpenses;
+
+      const PERSONS_LIST = ["Theekshana", "Praveen"];
+      const summaryRows = PERSONS_LIST.map(name => {
+        const ci = cashIns.filter(i => i.person === name).reduce((s, i) => s + i.amount, 0);
+        const ex = expenses.filter(e => e.person === name).reduce((s, e) => s + e.amount, 0);
+        return [name, ci, ex, ci - ex];
+      });
+
+      const escape = (v: string | number) => {
+        const s = String(v ?? "");
+        return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const row = (cells: (string | number)[]) => cells.map(escape).join(",");
+
+      const lines: string[] = [
+        row(["ZERO POS SOLUTIONS — FINANCIAL REPORT", `Exported: ${new Date().toLocaleDateString("en-GB")}`]),
+        "",
+        row(["SUMMARY"]),
+        row(["", "Cash In (LKR)", "Expenses (LKR)", "Balance (LKR)"]),
+        ...summaryRows.map(r => row(r)),
+        row(["TOTAL", totalCashIn, totalExpenses, balance]),
+        "",
+        row(["CASH IN RECORDS"]),
+        row(["Title", "Person", "Date", "Amount (LKR)", "Description"]),
+        ...cashIns.map(i => row([i.title, i.person ?? "", new Date(i.date).toLocaleDateString("en-GB"), i.amount, i.description ?? ""])),
+        "",
+        row(["EXPENSES RECORDS"]),
+        row(["Title", "Person", "Category", "Date", "Amount (LKR)", "Description"]),
+        ...expenses.map(e => row([e.title, e.person ?? "", e.category, new Date(e.date).toLocaleDateString("en-GB"), e.amount, e.description ?? ""])),
+      ];
+
+      const blob = new Blob(["﻿" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Zero-Pos-Financial-Report-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: "overview", label: "Overview", icon: <TrendingUp className="h-4 w-4" /> },
@@ -947,9 +1002,15 @@ export default function BusinessPage() {
 
   return (
     <div className="space-y-5 w-full">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Business Management</h2>
-        <p className="text-sm text-gray-500">Track expenses, leads, and debt records</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Business Management</h2>
+          <p className="text-sm text-gray-500">Track expenses, leads, and debt records</p>
+        </div>
+        <Button variant="outline" onClick={handleExportAll} disabled={exporting} className="gap-2">
+          <Download className="h-4 w-4" />
+          {exporting ? "Exporting..." : "Export Full Report"}
+        </Button>
       </div>
 
       {/* Tabs */}
