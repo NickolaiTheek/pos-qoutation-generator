@@ -11,6 +11,7 @@ import {
     ArrowDownCircle,
     ArrowUpCircle,
     CreditCard,
+    Download,
     Pencil,
     Plus,
     ShoppingBag,
@@ -21,6 +22,19 @@ import {
     Wallet
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+
+function exportCSV(filename: string, headers: string[], rows: (string | number)[][]) {
+  const escape = (v: string | number) => {
+    const s = String(v ?? "");
+    return s.includes(",") || s.includes('"') || s.includes("\n") ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const csv = [headers, ...rows].map(r => r.map(escape).join(",")).join("\n");
+  const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 
 const EXPENSE_CATEGORIES = ["Delivery", "Equipment", "Marketing", "Office", "Travel", "Utilities", "Other"];
 const PERSONS = ["Theekshana", "Praveen"] as const;
@@ -242,11 +256,29 @@ function ExpensesTab() {
 
   const total = expenses.reduce((s, e) => s + e.amount, 0);
 
+  const handleExport = () => {
+    exportCSV(
+      `Zero-Pos-Expenses-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Title", "Person", "Category", "Date", "Amount (LKR)", "Description"],
+      expenses.map(e => [
+        e.title,
+        e.person ?? "",
+        e.category,
+        new Date(e.date).toLocaleDateString("en-GB"),
+        e.amount,
+        e.description ?? "",
+      ])
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">{expenses.length} records · Total: <span className="font-semibold text-red-600">{formatCurrency(total)}</span></p>
-        <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Expense</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="gap-2"><Download className="h-4 w-4" />Export Excel</Button>
+          <Button onClick={openAdd} className="gap-2"><Plus className="h-4 w-4" /> Add Expense</Button>
+        </div>
       </div>
 
       <Card>
@@ -418,11 +450,28 @@ function CashInTab() {
 
   const total = items.reduce((s, i) => s + i.amount, 0);
 
+  const handleExport = () => {
+    exportCSV(
+      `Zero-Pos-CashIn-${new Date().toISOString().slice(0, 10)}.csv`,
+      ["Title", "Person", "Date", "Amount (LKR)", "Description"],
+      items.map(i => [
+        i.title,
+        i.person ?? "",
+        new Date(i.date).toLocaleDateString("en-GB"),
+        i.amount,
+        i.description ?? "",
+      ])
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">{items.length} records · Total: <span className="font-semibold text-green-600">{formatCurrency(total)}</span></p>
-        <Button onClick={openAdd} className="gap-2 bg-green-600 hover:bg-green-700"><Plus className="h-4 w-4" /> Add Cash In</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExport} className="gap-2"><Download className="h-4 w-4" />Export Excel</Button>
+          <Button onClick={openAdd} className="gap-2 bg-green-600 hover:bg-green-700"><Plus className="h-4 w-4" /> Add Cash In</Button>
+        </div>
       </div>
 
       <Card>
