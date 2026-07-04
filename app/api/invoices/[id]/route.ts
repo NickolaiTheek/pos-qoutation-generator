@@ -57,19 +57,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (data.note !== undefined) updateData.note = data.note || null;
     if (data.status) updateData.status = data.status;
 
-    // Payment tracking: setting advancePaid auto-derives the invoice status
-    if (data.advancePaid !== undefined) {
-      updateData.advancePaid = data.advancePaid;
-      const current = await getDoc(doc(db, "invoices", id));
-      const grandTotal = (current.data()?.grandTotal as number) ?? 0;
-      updateData.status =
-        data.advancePaid >= grandTotal && grandTotal > 0
-          ? "Paid"
-          : data.advancePaid > 0
-            ? "Partially Paid"
-            : "Unpaid";
-    }
-
     if (data.items) {
       const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
       const discountTotal = data.items.reduce((sum, item) => sum + item.discount, 0);
@@ -89,6 +76,23 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         total: item.quantity * item.unitPrice - item.discount,
         warranty: item.warranty || null,
       }));
+    }
+
+    // Payment tracking: a positive advance auto-derives the status
+    // (runs after items so a same-request grandTotal change is respected)
+    if (data.advancePaid !== undefined) {
+      updateData.advancePaid = data.advancePaid;
+      let grandTotal = updateData.grandTotal as number | undefined;
+      if (grandTotal === undefined) {
+        const current = await getDoc(doc(db, "invoices", id));
+        grandTotal = (current.data()?.grandTotal as number) ?? 0;
+      }
+      if (data.advancePaid > 0) {
+        updateData.status = data.advancePaid >= grandTotal && grandTotal > 0 ? "Paid" : "Partially Paid";
+      } else if (updateData.status === "Partially Paid") {
+        // advance removed — a stale Partially Paid label makes no sense
+        updateData.status = "Unpaid";
+      }
     }
 
     const ref = doc(db, "invoices", id);

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/lib/utils";
 import type { Customer, Invoice, LineItem, Product } from "@/types";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
@@ -19,6 +20,7 @@ export default function EditInvoicePage() {
   const [customerId, setCustomerId] = useState("");
   const [date, setDate] = useState("");
   const [status, setStatus] = useState("Unpaid");
+  const [advancePaid, setAdvancePaid] = useState("");
   const [note, setNote] = useState("");
   const [items, setItems] = useState<LineItem[]>([]);
   const [saving, setSaving] = useState(false);
@@ -35,6 +37,7 @@ export default function EditInvoicePage() {
       setCustomerId(inv.customerId);
       setDate(new Date(inv.date).toISOString().slice(0, 10));
       setStatus(inv.status);
+      setAdvancePaid(inv.advancePaid ? String(inv.advancePaid) : "");
       setNote(inv.note ?? "");
       setItems((inv.items ?? []).map(i => ({
         productId: i.productId ?? "",
@@ -62,6 +65,7 @@ export default function EditInvoicePage() {
           customerId: customerId || null,
           date: new Date(date).toISOString(),
           status,
+          advancePaid: advancePaid.trim() === "" ? 0 : parseFloat(advancePaid) || 0,
           note,
           items: items.filter(i => i.name.trim()).map(i => ({
             productId: i.productId || undefined,
@@ -110,9 +114,33 @@ export default function EditInvoicePage() {
               <Label>Status</Label>
               <select value={status} onChange={e => setStatus(e.target.value)} className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="Unpaid">Unpaid</option>
+                <option value="Partially Paid">Partially Paid</option>
                 <option value="Paid">Paid</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Advance Paid (LKR)</Label>
+              <input
+                type="number" min="0" step="0.01"
+                value={advancePaid}
+                onChange={e => setAdvancePaid(e.target.value)}
+                placeholder="0.00"
+                className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {(() => {
+                const adv = parseFloat(advancePaid) || 0;
+                const total = items.reduce((s, i) => s + (i.quantity * i.unitPrice - (i.discount || 0)), 0);
+                if (adv <= 0) return <p className="text-xs text-gray-400">Enter the advance received — balance shows on the invoice automatically.</p>;
+                return (
+                  <p className="text-xs">
+                    <span className="text-green-600 font-medium">Received {formatCurrency(adv)}</span>
+                    <span className="text-gray-400 mx-1">·</span>
+                    <span className="text-orange-600 font-medium">Balance {formatCurrency(Math.max(0, total - adv))}</span>
+                    {adv >= total && total > 0 && <span className="ml-1 text-emerald-600 font-semibold">→ Paid ✓</span>}
+                  </p>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>
