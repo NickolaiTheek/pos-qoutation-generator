@@ -19,6 +19,7 @@ const invoiceUpdateSchema = z.object({
   date: z.string().optional(),
   note: z.string().optional(),
   status: z.string().optional(),
+  advancePaid: z.number().min(0).optional(),
   items: z.array(itemSchema).min(1).optional(),
 });
 
@@ -55,6 +56,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (data.date) updateData.date = new Date(data.date);
     if (data.note !== undefined) updateData.note = data.note || null;
     if (data.status) updateData.status = data.status;
+
+    // Payment tracking: setting advancePaid auto-derives the invoice status
+    if (data.advancePaid !== undefined) {
+      updateData.advancePaid = data.advancePaid;
+      const current = await getDoc(doc(db, "invoices", id));
+      const grandTotal = (current.data()?.grandTotal as number) ?? 0;
+      updateData.status =
+        data.advancePaid >= grandTotal && grandTotal > 0
+          ? "Paid"
+          : data.advancePaid > 0
+            ? "Partially Paid"
+            : "Unpaid";
+    }
 
     if (data.items) {
       const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);

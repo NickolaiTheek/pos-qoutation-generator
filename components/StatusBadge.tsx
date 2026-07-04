@@ -11,6 +11,7 @@ export default function StatusBadge({ status }: StatusBadgeProps) {
     Accepted: "success",
     Rejected: "danger",
     Unpaid: "warning",
+    "Partially Paid": "info",
     Paid: "success",
     Cancelled: "danger",
   };

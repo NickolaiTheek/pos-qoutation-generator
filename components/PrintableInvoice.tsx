@@ -159,6 +159,8 @@ export default function PrintableInvoice({
   const computedTotal = items.reduce((s, i) => s + (i.total ?? i.quantity * i.unitPrice - (i.discount ?? 0)), 0);
   const grandTotal = typeof invoice.grandTotal === "number" && !isNaN(invoice.grandTotal) ? invoice.grandTotal : computedTotal;
   const isPaid = invoice.status === "Paid";
+  const advancePaid = typeof invoice.advancePaid === "number" && invoice.advancePaid > 0 ? invoice.advancePaid : 0;
+  const balanceDue = grandTotal - advancePaid;
 
   const logo = businessLogoUrl || "/logo.png";
 
@@ -301,11 +303,27 @@ export default function PrintableInvoice({
             );
           })}
 
-          {/* ── GRAND TOTAL — outlined, not a black slab ── */}
+          {/* ── GRAND TOTAL + PAYMENT SUMMARY ── */}
           <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0" })}>
-            <div style={p({ border: `1.5px solid ${INK}`, borderRadius: "4px", padding: "11px 18px", display: "flex", alignItems: "center", gap: "36px", minWidth: "270px", background: IVORY })}>
-              <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Grand Total</span>
-              <span style={p({ color: INK, fontSize: "17px", fontWeight: 800, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
+            <div style={p({ minWidth: "290px" })}>
+              <div style={p({ border: `1.5px solid ${INK}`, borderRadius: "4px", padding: "11px 18px", display: "flex", alignItems: "center", gap: "36px", background: IVORY })}>
+                <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Grand Total</span>
+                <span style={p({ color: INK, fontSize: "17px", fontWeight: 800, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
+              </div>
+
+              {/* Payment summary — only when an advance has been received */}
+              {advancePaid > 0 && (
+                <>
+                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 18px 6px 18px", borderBottom: `1px solid ${LINE}` })}>
+                    <span style={p({ color: MUTE, fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Advance Paid</span>
+                    <span style={p({ color: RED, fontSize: "12px", fontWeight: 700 })}>−{formatCurrency(advancePaid)}</span>
+                  </div>
+                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 18px", marginTop: "7px", background: INK, borderRadius: "4px", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" })}>
+                    <span style={p({ color: "#cfc7b8", fontSize: "10.5px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Balance Due</span>
+                    <span style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 800 })}>{formatCurrency(balanceDue)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

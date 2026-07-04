@@ -92,6 +92,7 @@ export interface Invoice {
   subtotal: number;
   discountTotal: number;
   grandTotal: number;
+  advancePaid?: number;
   note?: string | null;
   status: string;
   createdAt: Date;
