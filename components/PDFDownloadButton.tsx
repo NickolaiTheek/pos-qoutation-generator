@@ -47,46 +47,26 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
       let placedAPage = false;
 
       for (const pageEl of pageEls) {
-        // Capture each page element separately so the PDF contains distinct A4 pages
+        // One designed sheet becomes one PDF page, at full A4 width.
+        // Capture the visible page only so a long item list cannot spill
+        // the signature or remaining balance onto an extra sheet.
+        const captureW = pageEl.clientWidth;
+        const captureH = pageEl.clientHeight;
         const canvasPage = await html2canvas(pageEl, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
           backgroundColor: "#ffffff",
-          width: pageEl.scrollWidth,
-          height: pageEl.scrollHeight,
-          windowWidth: pageEl.scrollWidth,
-          windowHeight: pageEl.scrollHeight,
+          width: captureW,
+          height: captureH,
+          windowWidth: captureW,
+          windowHeight: captureH,
         });
 
-        // Keep the sheet full width. A taller invoice (advance rows, long
-        // item lists) continues on the next page instead of shrinking, which
-        // used to leave a large blank margin on both sides.
-        const pxPerMm = canvasPage.width / contentW;
-        const slicePx = Math.max(1, Math.floor((PAGE_H - MARGIN * 2) * pxPerMm));
-        let offsetY = 0;
-
-        while (offsetY < canvasPage.height - 1) {
-          const heightPx = Math.min(slicePx, canvasPage.height - offsetY);
-          const slice = document.createElement("canvas");
-          slice.width = canvasPage.width;
-          slice.height = heightPx;
-          const ctx = slice.getContext("2d");
-          if (!ctx) throw new Error("Could not prepare the PDF page.");
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, slice.width, slice.height);
-          ctx.drawImage(
-            canvasPage,
-            0, offsetY, canvasPage.width, heightPx,
-            0, 0, canvasPage.width, heightPx,
-          );
-
-          if (placedAPage) pdf.addPage();
-          const drawH = (heightPx / canvasPage.width) * contentW;
-          pdf.addImage(slice.toDataURL("image/png"), "PNG", MARGIN, MARGIN, contentW, drawH);
-          placedAPage = true;
-          offsetY += heightPx;
-        }
+        if (placedAPage) pdf.addPage();
+        const drawH = Math.min((canvasPage.height / canvasPage.width) * contentW, PAGE_H);
+        pdf.addImage(canvasPage.toDataURL("image/png"), "PNG", MARGIN, MARGIN, contentW, drawH);
+        placedAPage = true;
       }
 
       pdf.save(`${filename}.pdf`);

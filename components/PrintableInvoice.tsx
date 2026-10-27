@@ -166,13 +166,13 @@ export default function PrintableInvoice({
 
   // ── Header (Ivory + Ink, hairline rule, no black bar) ──
   const Header = () => (
-    <div style={p({ background: PAPER, padding: "16px 13mm 0 13mm", pageBreakInside: "avoid", WebkitPrintColorAdjust: "exact" })}>
+    <div style={p({ background: PAPER, padding: "8px 11mm 0 11mm", pageBreakInside: "avoid", WebkitPrintColorAdjust: "exact" })}>
       <div style={p({ display: "flex", alignItems: "center", justifyContent: "space-between" })}>
         {/* Logo — shown large; the logo image already contains the company name */}
-        <img src={logo} alt={businessName} style={p({ height: "70px", width: "auto", objectFit: "contain", display: "block" })} />
+        <img src={logo} alt={businessName} style={p({ height: "46px", width: "auto", objectFit: "contain", display: "block" })} />
 
         <div style={p({ textAlign: "right" })}>
-          <div style={p({ fontSize: "22px", fontWeight: 300, letterSpacing: "7px", color: FAINT, textTransform: "uppercase", marginBottom: "5px" })}>Invoice</div>
+          <div style={p({ fontSize: "18px", fontWeight: 300, letterSpacing: "5px", color: FAINT, textTransform: "uppercase", marginBottom: "2px" })}>Invoice</div>
           <div style={p({ color: MUTE, fontSize: "11.5px", letterSpacing: "0.2px" })}>
             {businessPhone && <span>{businessPhone}</span>}
             {businessPhone && businessEmail && <span style={p({ margin: "0 7px", color: FAINT })}>•</span>}
@@ -182,7 +182,7 @@ export default function PrintableInvoice({
       </div>
 
       {/* full-width hairline under header */}
-      <div style={p({ height: "1px", background: INK, marginTop: "14px" })} />
+      <div style={p({ height: "1px", background: INK, marginTop: "8px" })} />
     </div>
   );
 
@@ -203,7 +203,7 @@ export default function PrintableInvoice({
       {/* ══════════════════════════════════════════════════ */}
       {/* PAGE 1 — INVOICE                                  */}
       {/* ══════════════════════════════════════════════════ */}
-      <div className="print-page" style={p({ background: PAPER, width: "210mm", margin: "0 auto", boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", pageBreakAfter: "always", minHeight: "297mm", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" })}>
+      <div className="print-page" style={p({ background: PAPER, width: "210mm", height: "297mm", margin: "0 auto", boxSizing: "border-box", position: "relative", display: "flex", flexDirection: "column", overflow: "hidden", pageBreakAfter: "always", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" })}>
 
         {isPaid && (
           <div style={p({ position: "absolute", top: "42%", left: "50%", transform: "translate(-50%,-50%) rotate(-26deg)", fontSize: "92px", fontWeight: 800, color: INK, opacity: 0.04, letterSpacing: "10px", pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap", zIndex: 0 })}>PAID</div>
@@ -212,7 +212,7 @@ export default function PrintableInvoice({
         <Header />
 
         {/* ── BILL TO + META ── */}
-        <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "16px 13mm 14px 13mm", gap: "24px", position: "relative", zIndex: 1 })}>
+        <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "8px 11mm 6px 11mm", gap: "16px", position: "relative", zIndex: 1 })}>
           <div style={p({ flex: "1 1 0" })}>
             <p style={p({ fontSize: "10px", fontWeight: 700, letterSpacing: "2.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 7px 0" })}>Billed To</p>
             <p style={p({ fontWeight: 800, fontSize: "14px", margin: "0 0 3px 0", color: INK })}>{invoice.customer?.name ?? "—"}</p>
@@ -237,7 +237,7 @@ export default function PrintableInvoice({
         </div>
 
         {/* ── ITEMS ── */}
-        <div style={p({ padding: "0 13mm 0 13mm", flex: 1, position: "relative", zIndex: 1 })}>
+        <div style={p({ padding: "0 11mm 0 11mm", flex: 1, position: "relative", zIndex: 1, minHeight: 0 })}>
           {categoryOrder.map((cat) => {
             const catItems  = grouped[cat];
             const catSub    = catItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitPrice ?? 0), 0);
@@ -245,30 +245,30 @@ export default function PrintableInvoice({
             const catTotal  = catSub - catDisc;
 
             return (
-              <div key={cat} style={p({ marginBottom: "16px" })}>
+              <div key={cat} style={p({ marginBottom: "8px" })}>
                 <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "11px" })}>
                   <thead>
                     {/* Category header — ink text + hairline rule, no filled bar */}
                     <tr>
-                      <th style={p({ padding: "0 9px 6px 0", textAlign: "left",   color: INK,  fontWeight: 800, width: "53%", fontSize: "12px", letterSpacing: "1.5px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>{cat}</th>
-                      <th style={p({ padding: "0 9px 6px 9px", textAlign: "center", color: FAINT, fontWeight: 700, width: "9%",  fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Qty</th>
-                      <th style={p({ padding: "0 9px 6px 9px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Unit Price</th>
-                      <th style={p({ padding: "0 0 6px 9px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "10px", letterSpacing: "1px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Total</th>
+                      <th style={p({ padding: "0 6px 3px 0", textAlign: "left",   color: INK,  fontWeight: 800, width: "53%", fontSize: "11px", letterSpacing: "1.2px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>{cat}</th>
+                      <th style={p({ padding: "0 6px 3px 6px", textAlign: "center", color: FAINT, fontWeight: 700, width: "9%",  fontSize: "9px", letterSpacing: "0.6px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Qty</th>
+                      <th style={p({ padding: "0 6px 3px 6px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "9px", letterSpacing: "0.6px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Unit Price</th>
+                      <th style={p({ padding: "0 0 3px 6px", textAlign: "right",  color: FAINT, fontWeight: 700, width: "19%", fontSize: "9px", letterSpacing: "0.6px", textTransform: "uppercase", borderBottom: `1.5px solid ${INK}` })}>Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {catItems.map((item) => (
                       <tr key={item.id} style={p({ borderBottom: `1px solid ${LINE}` })}>
-                        <td style={p({ padding: "9px 9px 9px 0", verticalAlign: "top" })}>
-                          <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "11.5px" })}>{sanitizeName(item.name)}</span>
-                          {item.description && <span style={p({ fontSize: "11.5px", color: MUTE, display: "block", marginTop: "2px", lineHeight: 1.5 })}>{renderBold(item.description)}</span>}
-                          {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "11px", color: FAINT, display: "block", marginTop: "2px" })}>{item.warranty}</span>}
+                        <td style={p({ padding: "3px 6px 3px 0", verticalAlign: "top" })}>
+                          <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "11px", lineHeight: 1.25 })}>{sanitizeName(item.name)}</span>
+                          {item.description && <span style={p({ fontSize: "10px", color: MUTE, display: "block", marginTop: "1px", lineHeight: 1.25 })}>{renderBold(item.description)}</span>}
+                          {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "10px", color: FAINT, display: "block", marginTop: "1px", lineHeight: 1.25 })}>{item.warranty}</span>}
                         </td>
-                        <td style={p({ padding: "9px 9px", textAlign: "center", verticalAlign: "top", color: INK2, fontWeight: 600 })}>{item.quantity ? item.quantity : <span style={p({ color: FAINT })}>—</span>}</td>
-                        <td style={p({ padding: "9px 9px", textAlign: "right", verticalAlign: "top", color: MUTE, whiteSpace: "nowrap" })}>
+                        <td style={p({ padding: "3px 6px", textAlign: "center", verticalAlign: "top", color: INK2, fontWeight: 600 })}>{item.quantity ? item.quantity : <span style={p({ color: FAINT })}>—</span>}</td>
+                        <td style={p({ padding: "3px 6px", textAlign: "right", verticalAlign: "top", color: MUTE, whiteSpace: "nowrap" })}>
                           {(item.unitPrice ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: INK, letterSpacing: "0.5px" })}>Free</span> : formatCurrency(item.unitPrice ?? 0)}
                         </td>
-                        <td style={p({ padding: "9px 0 9px 9px", textAlign: "right", verticalAlign: "top", fontWeight: 700, color: INK, whiteSpace: "nowrap" })}>
+                        <td style={p({ padding: "3px 0 3px 6px", textAlign: "right", verticalAlign: "top", fontWeight: 700, color: INK, whiteSpace: "nowrap" })}>
                           {(item.total ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: INK, letterSpacing: "0.5px" })}>Free</span> : formatCurrency(item.total ?? 0)}
                         </td>
                       </tr>
@@ -304,7 +304,7 @@ export default function PrintableInvoice({
           })}
 
           {/* ── GRAND TOTAL + PAYMENT SUMMARY ── */}
-          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0", minWidth: 0 })}>
+          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "2px 0 8px 0", minWidth: 0 })}>
             <div style={p({ width: "280px", maxWidth: "100%", minWidth: 0, border: `1.5px solid ${INK}`, borderRadius: "4px", overflow: "hidden" })}>
               <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "11px 16px", background: IVORY })}>
                 <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Grand Total</span>
@@ -328,24 +328,24 @@ export default function PrintableInvoice({
 
           {/* ── NOTE (only if explicitly set) ── */}
           {invoice.note && (
-            <div style={p({ background: IVORY, borderLeft: `2px solid ${LINE2}`, padding: "10px 14px", marginBottom: "14px", borderRadius: "0 4px 4px 0" })}>
-              <p style={p({ fontWeight: 700, fontSize: "10.5px", textTransform: "uppercase", color: FAINT, margin: "0 0 5px 0", letterSpacing: "1.5px" })}>Note</p>
-              <p style={p({ fontSize: "11px", lineHeight: 1.6, color: INK2, margin: 0 })}>
+            <div style={p({ background: IVORY, borderLeft: `2px solid ${LINE2}`, padding: "6px 10px", marginBottom: "6px", borderRadius: "0 4px 4px 0" })}>
+              <p style={p({ fontWeight: 700, fontSize: "10px", textTransform: "uppercase", color: FAINT, margin: "0 0 2px 0", letterSpacing: "1.2px" })}>Note</p>
+              <p style={p({ fontSize: "10px", lineHeight: 1.35, color: INK2, margin: 0 })}>
                 {invoice.note.replace(/We will visit your location and complete the full POS system setup\.?\s*/gi, "").trim()}
               </p>
             </div>
           )}
 
           {/* ── SIGNATURES ── */}
-          <div style={p({ marginBottom: "20px", marginTop: "auto", paddingTop: "20px" })}>
-            <div style={p({ display: "flex", justifyContent: "space-between", gap: "20px" })}>
+          <div style={p({ marginBottom: "6px", marginTop: "auto", paddingTop: "8px", pageBreakInside: "avoid" })}>
+            <div style={p({ display: "flex", justifyContent: "space-between", gap: "16px" })}>
               {[
                 { title: "Authorized By", role: "Co-Founder", sub: businessName },
                 { title: "Prepared By",   role: "Co-Founder", sub: businessName },
                 { title: "Accepted By",   role: "Client", sub: invoice.customer?.name || "Customer Acknowledgement" },
               ].map((s, i) => (
                 <div key={i} style={p({ flex: "1 1 0", textAlign: "center" })}>
-                  <div style={p({ borderBottom: `1px solid ${LINE2}`, height: "34px", marginBottom: "7px" })} />
+                  <div style={p({ borderBottom: `1px solid ${LINE2}`, height: "22px", marginBottom: "4px" })} />
                   <p style={p({ fontSize: "11.5px", fontWeight: 800, color: INK, margin: "0 0 2px 0", letterSpacing: "0.3px" })}>{s.title}</p>
                   <p style={p({ fontSize: "10.5px", fontWeight: 600, color: MUTE,  margin: "0 0 1px 0" })}>{s.role}</p>
                   <p style={p({ fontSize: "10.5px",  color: FAINT, margin: 0 })}>{s.sub}</p>
@@ -356,7 +356,7 @@ export default function PrintableInvoice({
         </div>
 
         {/* ── FOOTER — hairline rule, light text, no black bar ── */}
-        <div style={p({ padding: "10px 13mm 12px 13mm", borderTop: `1px solid ${INK}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", pageBreakAfter: "always", pageBreakInside: "avoid" })}>
+        <div style={p({ padding: "6px 11mm 8px 11mm", borderTop: `1px solid ${INK}`, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", pageBreakInside: "avoid" })}>
           <span style={p({ color: FAINT, fontSize: "11px", letterSpacing: "0.5px" })}>{businessName}</span>
           <span style={p({ color: MUTE, fontSize: "11px" })}>
             {businessPhone && <>{businessPhone}</>}
