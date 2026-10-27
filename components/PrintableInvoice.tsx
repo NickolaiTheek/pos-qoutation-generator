@@ -1,6 +1,7 @@
 import { renderBold } from "@/components/ItemTable";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { Invoice } from "@/types";
+import { useLayoutEffect, useRef, useState } from "react";
 
 interface PrintableInvoiceProps {
   invoice: Invoice;
@@ -164,6 +165,42 @@ export default function PrintableInvoice({
 
   const logo = businessLogoUrl || "/logo.png";
 
+  // Fit page 1 to a single A4 sheet. Few items spread out so the page
+  // still looks full; many items tighten until the totals and signatures fit.
+  const fitKey = [
+    invoice.id,
+    items.length,
+    advancePaid,
+    invoice.note ?? "",
+    categoryOrder.join("|"),
+  ].join("~");
+  const frameRef = useRef<HTMLDivElement>(null);
+  const fittedKey = useRef(fitKey);
+  const [rowPad, setRowPad] = useState(8);
+  const [tight, setTight] = useState(false);
+
+  useLayoutEffect(() => {
+    if (fittedKey.current !== fitKey) {
+      fittedKey.current = fitKey;
+      setRowPad(8);
+      setTight(false);
+      return;
+    }
+    const frame = frameRef.current;
+    if (!frame) return;
+    const overflow = frame.scrollHeight - frame.clientHeight;
+    if (overflow <= 1) return;
+    const rows = Math.max(1, frame.querySelectorAll("[data-item-row]").length);
+    const next = Math.max(1, rowPad - overflow / (rows * 2) - 0.25);
+    if (next < rowPad - 0.15) {
+      setRowPad(Number(next.toFixed(2)));
+      return;
+    }
+    if (!tight) setTight(true);
+  }, [fitKey, rowPad, tight]);
+
+  const line = tight ? 1.15 : 1.28;
+
   // ── Header (Ivory + Ink, hairline rule, no black bar) ──
   const Header = () => (
     <div style={p({ background: PAPER, padding: "8px 11mm 0 11mm", pageBreakInside: "avoid", WebkitPrintColorAdjust: "exact" })}>
@@ -237,7 +274,10 @@ export default function PrintableInvoice({
         </div>
 
         {/* ── ITEMS ── */}
-        <div style={p({ padding: "0 11mm 0 11mm", flex: 1, position: "relative", zIndex: 1, minHeight: 0 })}>
+        <div
+          ref={frameRef}
+          style={p({ padding: "0 11mm", flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "10px", position: "relative", zIndex: 1 })}
+        >
           {categoryOrder.map((cat) => {
             const catItems  = grouped[cat];
             const catSub    = catItems.reduce((s, i) => s + (i.quantity ?? 0) * (i.unitPrice ?? 0), 0);
@@ -245,7 +285,7 @@ export default function PrintableInvoice({
             const catTotal  = catSub - catDisc;
 
             return (
-              <div key={cat} style={p({ marginBottom: "8px" })}>
+              <div key={cat}>
                 <table style={p({ width: "100%", borderCollapse: "collapse", fontSize: "11px" })}>
                   <thead>
                     {/* Category header — ink text + hairline rule, no filled bar */}
@@ -258,17 +298,17 @@ export default function PrintableInvoice({
                   </thead>
                   <tbody>
                     {catItems.map((item) => (
-                      <tr key={item.id} style={p({ borderBottom: `1px solid ${LINE}` })}>
-                        <td style={p({ padding: "3px 6px 3px 0", verticalAlign: "top" })}>
-                          <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "11px", lineHeight: 1.25 })}>{sanitizeName(item.name)}</span>
-                          {item.description && <span style={p({ fontSize: "10px", color: MUTE, display: "block", marginTop: "1px", lineHeight: 1.25 })}>{renderBold(item.description)}</span>}
-                          {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "10px", color: FAINT, display: "block", marginTop: "1px", lineHeight: 1.25 })}>{item.warranty}</span>}
+                      <tr key={item.id} data-item-row="" style={p({ borderBottom: `1px solid ${LINE}` })}>
+                        <td style={p({ padding: `${rowPad}px 6px ${rowPad}px 0`, verticalAlign: "top" })}>
+                          <span style={p({ fontWeight: 700, color: INK, display: "block", fontSize: "11px", lineHeight: line })}>{sanitizeName(item.name)}</span>
+                          {item.description && <span style={p({ fontSize: "10px", color: MUTE, display: "block", marginTop: "1px", lineHeight: line })}>{renderBold(item.description)}</span>}
+                          {item.warranty    && <span style={p({ fontStyle: "italic", fontSize: "10px", color: FAINT, display: "block", marginTop: "1px", lineHeight: line })}>{item.warranty}</span>}
                         </td>
-                        <td style={p({ padding: "3px 6px", textAlign: "center", verticalAlign: "top", color: INK2, fontWeight: 600 })}>{item.quantity ? item.quantity : <span style={p({ color: FAINT })}>—</span>}</td>
-                        <td style={p({ padding: "3px 6px", textAlign: "right", verticalAlign: "top", color: MUTE, whiteSpace: "nowrap" })}>
+                        <td style={p({ padding: `${rowPad}px 6px`, textAlign: "center", verticalAlign: "top", color: INK2, fontWeight: 600 })}>{item.quantity ? item.quantity : <span style={p({ color: FAINT })}>—</span>}</td>
+                        <td style={p({ padding: `${rowPad}px 6px`, textAlign: "right", verticalAlign: "top", color: MUTE, whiteSpace: "nowrap" })}>
                           {(item.unitPrice ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: INK, letterSpacing: "0.5px" })}>Free</span> : formatCurrency(item.unitPrice ?? 0)}
                         </td>
-                        <td style={p({ padding: "3px 0 3px 6px", textAlign: "right", verticalAlign: "top", fontWeight: 700, color: INK, whiteSpace: "nowrap" })}>
+                        <td style={p({ padding: `${rowPad}px 0 ${rowPad}px 6px`, textAlign: "right", verticalAlign: "top", fontWeight: 700, color: INK, whiteSpace: "nowrap" })}>
                           {(item.total ?? 0) === 0 ? <span style={p({ fontWeight: 700, color: INK, letterSpacing: "0.5px" })}>Free</span> : formatCurrency(item.total ?? 0)}
                         </td>
                       </tr>
@@ -304,7 +344,7 @@ export default function PrintableInvoice({
           })}
 
           {/* ── GRAND TOTAL + PAYMENT SUMMARY ── */}
-          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "2px 0 8px 0", minWidth: 0 })}>
+          <div style={p({ display: "flex", justifyContent: "flex-end", minWidth: 0 })}>
             <div style={p({ width: "280px", maxWidth: "100%", minWidth: 0, border: `1.5px solid ${INK}`, borderRadius: "4px", overflow: "hidden" })}>
               <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "11px 16px", background: IVORY })}>
                 <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Grand Total</span>
@@ -328,7 +368,7 @@ export default function PrintableInvoice({
 
           {/* ── NOTE (only if explicitly set) ── */}
           {invoice.note && (
-            <div style={p({ background: IVORY, borderLeft: `2px solid ${LINE2}`, padding: "6px 10px", marginBottom: "6px", borderRadius: "0 4px 4px 0" })}>
+            <div style={p({ background: IVORY, borderLeft: `2px solid ${LINE2}`, padding: "6px 10px", borderRadius: "0 4px 4px 0" })}>
               <p style={p({ fontWeight: 700, fontSize: "10px", textTransform: "uppercase", color: FAINT, margin: "0 0 2px 0", letterSpacing: "1.2px" })}>Note</p>
               <p style={p({ fontSize: "10px", lineHeight: 1.35, color: INK2, margin: 0 })}>
                 {invoice.note.replace(/We will visit your location and complete the full POS system setup\.?\s*/gi, "").trim()}
@@ -337,7 +377,7 @@ export default function PrintableInvoice({
           )}
 
           {/* ── SIGNATURES ── */}
-          <div style={p({ marginBottom: "6px", marginTop: "auto", paddingTop: "8px", pageBreakInside: "avoid" })}>
+          <div style={p({ pageBreakInside: "avoid" })}>
             <div style={p({ display: "flex", justifyContent: "space-between", gap: "16px" })}>
               {[
                 { title: "Authorized By", role: "Co-Founder", sub: businessName },
@@ -345,7 +385,7 @@ export default function PrintableInvoice({
                 { title: "Accepted By",   role: "Client", sub: invoice.customer?.name || "Customer Acknowledgement" },
               ].map((s, i) => (
                 <div key={i} style={p({ flex: "1 1 0", textAlign: "center" })}>
-                  <div style={p({ borderBottom: `1px solid ${LINE2}`, height: "22px", marginBottom: "4px" })} />
+                  <div style={p({ borderBottom: `1px solid ${LINE2}`, height: "28px", marginBottom: "4px" })} />
                   <p style={p({ fontSize: "11.5px", fontWeight: 800, color: INK, margin: "0 0 2px 0", letterSpacing: "0.3px" })}>{s.title}</p>
                   <p style={p({ fontSize: "10.5px", fontWeight: 600, color: MUTE,  margin: "0 0 1px 0" })}>{s.role}</p>
                   <p style={p({ fontSize: "10.5px",  color: FAINT, margin: 0 })}>{s.sub}</p>
