@@ -30,7 +30,7 @@ const RED     = "#a8442f"; // muted brick — discounts
 const W_EN = [
   {
     t: "Hardware Warranty",
-    b: "Hardware items are covered by a 1-year shop warranty from the invoice date.",
+    b: "Printers, cash drawers, UPS units, and barcode scanners are covered by a 1-year warranty from the invoice date. PCs and monitors are used items and are covered by a 3-month shop warranty.",
   },
   {
     t: "Software Support",
@@ -73,7 +73,7 @@ const W_EN = [
 const W_SI = [
   {
     t: "Hardware Warranty",
-    b: "Hardware items සඳහා invoice date එකේ සිට අවුරුදු 1ක shop warranty එකක් ලබාදේ.",
+    b: "Printers, cash drawers, UPS, සහ barcode scanners සඳහා invoice date එකේ සිට අවුරුදු 1ක warranty එකක් ලබාදේ. PC සහ monitor used උපකරණ නිසා මාස 3ක shop warranty එකක් ලබාදේ.",
   },
   {
     t: "Software Support",
