@@ -305,22 +305,21 @@ export default function PrintableInvoice({
 
           {/* ── GRAND TOTAL + PAYMENT SUMMARY ── */}
           <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0" })}>
-            <div style={p({ minWidth: "290px" })}>
-              <div style={p({ border: `1.5px solid ${INK}`, borderRadius: "4px", padding: "11px 18px", display: "flex", alignItems: "center", gap: "36px", background: IVORY })}>
-                <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Grand Total</span>
-                <span style={p({ color: INK, fontSize: "17px", fontWeight: 800, marginLeft: "auto" })}>{formatCurrency(grandTotal)}</span>
+            <div style={p({ width: "280px", border: `1.5px solid ${INK}`, borderRadius: "4px", overflow: "hidden" })}>
+              <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "11px 16px", background: IVORY })}>
+                <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Grand Total</span>
+                <span style={p({ color: INK, fontSize: "16px", fontWeight: 800, whiteSpace: "nowrap" })}>{formatCurrency(grandTotal)}</span>
               </div>
 
-              {/* Payment summary — only when an advance has been received */}
               {advancePaid > 0 && (
                 <>
-                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 18px 6px 18px", borderBottom: `1px solid ${LINE}` })}>
-                    <span style={p({ color: MUTE, fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Advance Paid</span>
-                    <span style={p({ color: RED, fontSize: "12px", fontWeight: 700 })}>−{formatCurrency(advancePaid)}</span>
+                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "8px 16px", borderTop: `1px solid ${LINE}`, background: PAPER })}>
+                    <span style={p({ color: MUTE, fontSize: "10px", fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase" })}>Advance Paid</span>
+                    <span style={p({ color: RED, fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap" })}>−{formatCurrency(advancePaid)}</span>
                   </div>
-                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 18px", marginTop: "7px", background: INK, borderRadius: "4px", WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" })}>
-                    <span style={p({ color: "#cfc7b8", fontSize: "10.5px", fontWeight: 700, letterSpacing: "2px", textTransform: "uppercase" })}>Balance Due</span>
-                    <span style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 800 })}>{formatCurrency(balanceDue)}</span>
+                  <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "10px 16px", background: INK, WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" })}>
+                    <span style={p({ color: "#cfc7b8", fontSize: "10px", fontWeight: 700, letterSpacing: "1.2px", textTransform: "uppercase" })}>Remaining Balance</span>
+                    <span style={p({ color: "#ffffff", fontSize: "15px", fontWeight: 800, whiteSpace: "nowrap" })}>{formatCurrency(balanceDue)}</span>
                   </div>
                 </>
               )}

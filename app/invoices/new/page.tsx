@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/lib/utils";
 import type { Customer, LineItem, Product, Settings } from "@/types";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import Link from "next/link";
@@ -24,6 +25,7 @@ export default function NewInvoicePage() {
   const [customerId, setCustomerId] = useState("");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState("Unpaid");
+  const [advancePaid, setAdvancePaid] = useState("");
   const [note, setNote] = useState("");
   const [items, setItems] = useState<LineItem[]>([emptyItem()]);
   const [saving, setSaving] = useState(false);
@@ -42,6 +44,10 @@ export default function NewInvoicePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!items.some(i => i.name.trim())) { setError("Add at least one item."); return; }
+    const advance = advancePaid.trim() === "" ? 0 : parseFloat(advancePaid);
+    if (advancePaid.trim() !== "" && (isNaN(advance) || advance < 0)) { setError("Enter a valid advance amount."); return; }
+    const total = items.filter(i => i.name.trim()).reduce((s, i) => s + (i.quantity * i.unitPrice - (i.discount || 0)), 0);
+    if (advance > total) { setError("Advance payment cannot exceed the invoice total."); return; }
     setSaving(true);
     setError("");
     try {
@@ -52,6 +58,7 @@ export default function NewInvoicePage() {
           customerId: customerId || null,
           date: new Date(date).toISOString(),
           status,
+          advancePaid: advance,
           note,
           items: items.filter(i => i.name.trim()).map(i => ({
             productId: i.productId || undefined,
@@ -109,6 +116,29 @@ export default function NewInvoicePage() {
                 <option value="Paid">Paid</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Advance Paid (LKR)</Label>
+              <input
+                type="number" min="0" step="0.01"
+                value={advancePaid}
+                onChange={e => setAdvancePaid(e.target.value)}
+                placeholder="0.00"
+                className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {(() => {
+                const adv = parseFloat(advancePaid) || 0;
+                const total = items.reduce((s, i) => s + (i.quantity * i.unitPrice - (i.discount || 0)), 0);
+                if (adv <= 0) return <p className="text-xs text-gray-400">If an advance was received, enter it here. It is deducted on the invoice and the remaining balance is shown.</p>;
+                return (
+                  <p className="text-xs">
+                    <span className="text-green-600 font-medium">Advance {formatCurrency(adv)}</span>
+                    <span className="text-gray-400 mx-1">·</span>
+                    <span className="text-orange-600 font-medium">Remaining {formatCurrency(Math.max(0, total - adv))}</span>
+                    {adv >= total && total > 0 && <span className="ml-1 text-emerald-600 font-semibold">→ Paid</span>}
+                  </p>
+                );
+              })()}
             </div>
           </CardContent>
         </Card>

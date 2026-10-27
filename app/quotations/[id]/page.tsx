@@ -4,8 +4,10 @@ import PDFDownloadButton from "@/components/PDFDownloadButton";
 import PrintableQuotation from "@/components/PrintableQuotation";
 import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatCurrency } from "@/lib/utils";
 import type { Quotation } from "@/types";
-import { ArrowLeft, ArrowRight, Pencil, Printer, Receipt } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, Pencil, Printer, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -16,6 +18,10 @@ export default function QuotationDetailPage() {
   const [quotation, setQuotation] = useState<Quotation | null>(null);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [convertAdvance, setConvertAdvance] = useState("");
+  const [convertError, setConvertError] = useState("");
+  const [converting, setConverting] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,30 +34,50 @@ export default function QuotationDetailPage() {
   const handlePrint = () => { window.print(); };
 
   const handleConvert = async () => {
-    if (!quotation || !confirm("Convert to invoice?")) return;
-    const res = await fetch("/api/invoices", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        customerId: quotation.customerId,
-        date: new Date().toISOString(),
-        note: settings?.defaultInvoiceNote ?? "",
-        status: "Unpaid",
-        quotationId: quotation.id,
-        items: (quotation.items ?? []).map(i => ({
-          productId: i.productId,
-          name: i.name,
-          description: i.description,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,
-          discount: i.discount,
-          warranty: i.warranty,
-        })),
-      }),
-    });
-    if (res.ok) {
-      const inv = await res.json();
-      router.push("/invoices/" + inv.id);
+    if (!quotation) return;
+    const advance = convertAdvance.trim() === "" ? 0 : parseFloat(convertAdvance);
+    if (convertAdvance.trim() !== "" && (isNaN(advance) || advance < 0)) {
+      setConvertError("Enter a valid advance amount.");
+      return;
+    }
+    if (advance > quotation.grandTotal) {
+      setConvertError("Advance payment cannot exceed the invoice total.");
+      return;
+    }
+    setConverting(true);
+    setConvertError("");
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: quotation.customerId,
+          date: new Date().toISOString(),
+          note: settings?.defaultInvoiceNote ?? "",
+          status: "Unpaid",
+          advancePaid: advance,
+          quotationId: quotation.id,
+          items: (quotation.items ?? []).map(i => ({
+            productId: i.productId,
+            name: i.name,
+            description: i.description,
+            category: i.category || "General",
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+            discount: i.discount,
+            warranty: i.warranty,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const inv = await res.json();
+        router.push("/invoices/" + inv.id);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setConvertError(err.error ?? "Failed to create invoice.");
+      }
+    } finally {
+      setConverting(false);
     }
   };
 
@@ -80,11 +106,56 @@ export default function QuotationDetailPage() {
           <Link href={"/quotations/" + id + "/advance"}>
             <Button variant="outline" className="gap-2"><Receipt className="h-4 w-4" />Advance Receipt</Button>
           </Link>
-          <Button variant="outline" className="gap-2" onClick={handleConvert}>
+          <Button variant="outline" className="gap-2" onClick={() => { setConvertAdvance(""); setConvertError(""); setConvertOpen(true); }}>
             <ArrowRight className="h-4 w-4" />Convert to Invoice
           </Button>
         </div>
       </div>
+
+      <Dialog open={convertOpen} onOpenChange={open => { setConvertOpen(open); if (!open) setConvertError(""); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-gray-900">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Convert to Invoice
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-gray-600">
+              This will create a new invoice from quotation{" "}
+              <span className="font-semibold text-gray-900">{quotation.quotationNumber}</span>.
+            </p>
+            <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-sm text-gray-700 flex justify-between">
+              <span>Total amount</span>
+              <span className="font-semibold">{formatCurrency(quotation.grandTotal)}</span>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Advance already paid (LKR)</label>
+              <input
+                type="number" min="0" step="0.01"
+                value={convertAdvance}
+                onChange={e => setConvertAdvance(e.target.value)}
+                placeholder="0.00 — leave blank if none"
+                className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {(parseFloat(convertAdvance) || 0) > 0 && (
+                <p className="text-xs">
+                  <span className="text-green-600 font-medium">Advance {formatCurrency(parseFloat(convertAdvance) || 0)}</span>
+                  <span className="text-gray-400 mx-1">·</span>
+                  <span className="text-orange-600 font-medium">Remaining {formatCurrency(Math.max(0, quotation.grandTotal - (parseFloat(convertAdvance) || 0)))}</span>
+                </p>
+              )}
+            </div>
+            {convertError && <p className="text-sm text-red-500">{convertError}</p>}
+          </div>
+          <div className="flex gap-2 justify-end pt-1">
+            <Button variant="outline" onClick={() => setConvertOpen(false)} disabled={converting}>Cancel</Button>
+            <Button onClick={handleConvert} disabled={converting} className="gap-2 bg-blue-600 hover:bg-blue-700">
+              {converting ? "Creating..." : "Create Invoice"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div ref={printRef}>
       <PrintableQuotation

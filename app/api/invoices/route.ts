@@ -30,6 +30,7 @@ const invoiceSchema = z.object({
   date: z.string(),
   note: z.string().optional(),
   status: z.string().optional(),
+  advancePaid: z.number().min(0).optional(),
   items: z.array(itemSchema).min(1, "At least one item is required"),
 });
 
@@ -83,6 +84,15 @@ export async function POST(req: NextRequest) {
     const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
     const discountTotal = data.items.reduce((sum, item) => sum + item.discount, 0);
     const grandTotal = subtotal - discountTotal;
+    const advancePaid = data.advancePaid ?? 0;
+    if (advancePaid > grandTotal) {
+      return NextResponse.json({ error: "Advance payment cannot exceed the invoice total." }, { status: 400 });
+    }
+    const status = advancePaid <= 0
+      ? (data.status || "Unpaid")
+      : advancePaid >= grandTotal && grandTotal > 0
+        ? "Paid"
+        : "Partially Paid";
 
     const invoiceNumber = await getNextInvoiceNumber();
 
@@ -102,7 +112,8 @@ export async function POST(req: NextRequest) {
       discountTotal,
       grandTotal,
       note: data.note || null,
-      status: data.status || "Unpaid",
+      status,
+      advancePaid,
       items: data.items.map((item) => ({
         id: crypto.randomUUID(),
         productId: item.productId || null,

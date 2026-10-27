@@ -20,6 +20,8 @@ export default function QuotationsPage() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [convertTarget, setConvertTarget] = useState<Quotation | null>(null);
+  const [convertAdvance, setConvertAdvance] = useState("");
+  const [convertError, setConvertError] = useState("");
   const [converting, setConverting] = useState(false);
 
   const fetchQuotations = useCallback(async () => {
@@ -70,9 +72,25 @@ export default function QuotationsPage() {
     }
   };
 
+  const openConvert = (q: Quotation) => {
+    setConvertAdvance("");
+    setConvertError("");
+    setConvertTarget(q);
+  };
+
   const handleConvertConfirm = async () => {
     if (!convertTarget) return;
+    const advance = convertAdvance.trim() === "" ? 0 : parseFloat(convertAdvance);
+    if (convertAdvance.trim() !== "" && (isNaN(advance) || advance < 0)) {
+      setConvertError("Enter a valid advance amount.");
+      return;
+    }
+    if (advance > convertTarget.grandTotal) {
+      setConvertError("Advance payment cannot exceed the invoice total.");
+      return;
+    }
     setConverting(true);
+    setConvertError("");
     try {
       const settings = await fetch("/api/settings").then(r => r.json());
       const res = await fetch("/api/invoices", {
@@ -83,6 +101,7 @@ export default function QuotationsPage() {
           date: new Date().toISOString(),
           note: settings.defaultInvoiceNote ?? "",
           status: "Unpaid",
+          advancePaid: advance,
           quotationId: convertTarget.id,
           items: (convertTarget.items ?? []).map(i => ({
             productId: i.productId || undefined,
@@ -184,7 +203,7 @@ export default function QuotationsPage() {
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
                         <Link href={"/quotations/" + q.id + "/advance"}><Button variant="ghost" size="icon" title="Advance Receipt"><Receipt className="h-3.5 w-3.5" /></Button></Link>
-                        <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => setConvertTarget(q)}>
+                        <Button variant="ghost" size="icon" title="Convert to Invoice" onClick={() => openConvert(q)}>
                           <ArrowRight className="h-3.5 w-3.5" />
                         </Button>
                         <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDelete(q.id)} className="text-red-400 hover:text-red-600">
@@ -201,7 +220,7 @@ export default function QuotationsPage() {
       </Card>
 
       {/* Convert to Invoice confirmation dialog */}
-      <Dialog open={!!convertTarget} onOpenChange={open => { if (!open) setConvertTarget(null); }}>
+      <Dialog open={!!convertTarget} onOpenChange={open => { if (!open) { setConvertTarget(null); setConvertError(""); } }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-gray-900">
@@ -223,6 +242,24 @@ export default function QuotationsPage() {
               <span>Total amount</span>
               <span className="font-semibold">{convertTarget ? formatCurrency(convertTarget.grandTotal) : ""}</span>
             </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700">Advance already paid (LKR)</label>
+              <input
+                type="number" min="0" step="0.01"
+                value={convertAdvance}
+                onChange={e => setConvertAdvance(e.target.value)}
+                placeholder="0.00 — leave blank if none"
+                className="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {convertTarget && (parseFloat(convertAdvance) || 0) > 0 && (
+                <p className="text-xs">
+                  <span className="text-green-600 font-medium">Advance {formatCurrency(parseFloat(convertAdvance) || 0)}</span>
+                  <span className="text-gray-400 mx-1">·</span>
+                  <span className="text-orange-600 font-medium">Remaining {formatCurrency(Math.max(0, convertTarget.grandTotal - (parseFloat(convertAdvance) || 0)))}</span>
+                </p>
+              )}
+            </div>
+            {convertError && <p className="text-sm text-red-500">{convertError}</p>}
           </div>
           <div className="flex gap-2 justify-end pt-1">
             <Button variant="outline" onClick={() => setConvertTarget(null)} disabled={converting}>
