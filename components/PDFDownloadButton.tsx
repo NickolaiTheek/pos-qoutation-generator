@@ -37,19 +37,16 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
         pageEls = Array.from(element.querySelectorAll(':scope > div')) as HTMLElement[];
       }
 
-      // A4 dimensions in mm — full bleed (each page has its own 18mm
-      // internal padding, so no extra outer margin is needed; this lets the
-      // ivory paper fill the whole sheet edge-to-edge and keeps fonts crisp).
+      // A4, full bleed. The invoice already has its own inner padding.
       const PAGE_W = 210;
       const PAGE_H = 297;
       const MARGIN = 0;
       const contentW = PAGE_W - MARGIN * 2;
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      let placedAPage = false;
 
-      for (let i = 0; i < pageEls.length; i++) {
-        const pageEl = pageEls[i];
-
+      for (const pageEl of pageEls) {
         // Capture each page element separately so the PDF contains distinct A4 pages
         const canvasPage = await html2canvas(pageEl, {
           scale: 2,
@@ -62,28 +59,34 @@ export default function PDFDownloadButton({ elementId, filename, label = "Downlo
           windowHeight: pageEl.scrollHeight,
         });
 
-        const imgData = canvasPage.toDataURL("image/png");
+        // Keep the sheet full width. A taller invoice (advance rows, long
+        // item lists) continues on the next page instead of shrinking, which
+        // used to leave a large blank margin on both sides.
+        const pxPerMm = canvasPage.width / contentW;
+        const slicePx = Math.max(1, Math.floor((PAGE_H - MARGIN * 2) * pxPerMm));
+        let offsetY = 0;
 
-        // Compute image height in mm to preserve aspect ratio when drawing into PDF
-        const imgHeightMm = (canvasPage.height / canvasPage.width) * contentW;
+        while (offsetY < canvasPage.height - 1) {
+          const heightPx = Math.min(slicePx, canvasPage.height - offsetY);
+          const slice = document.createElement("canvas");
+          slice.width = canvasPage.width;
+          slice.height = heightPx;
+          const ctx = slice.getContext("2d");
+          if (!ctx) throw new Error("Could not prepare the PDF page.");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, slice.width, slice.height);
+          ctx.drawImage(
+            canvasPage,
+            0, offsetY, canvasPage.width, heightPx,
+            0, 0, canvasPage.width, heightPx,
+          );
 
-        if (i > 0) pdf.addPage();
-
-        // Fit the captured page within the usable A4 area so nothing
-        // (e.g. the bottom footer) ever overflows off the page and gets
-        // clipped. If the content is taller than the usable height, scale
-        // it down proportionally and centre it horizontally.
-        const usableH = PAGE_H - MARGIN * 2;
-        let drawW = contentW;
-        let drawH = imgHeightMm;
-        if (drawH > usableH) {
-          const ratio = usableH / drawH;
-          drawH = usableH;
-          drawW = contentW * ratio;
+          if (placedAPage) pdf.addPage();
+          const drawH = (heightPx / canvasPage.width) * contentW;
+          pdf.addImage(slice.toDataURL("image/png"), "PNG", MARGIN, MARGIN, contentW, drawH);
+          placedAPage = true;
+          offsetY += heightPx;
         }
-        const xPos = MARGIN + (contentW - drawW) / 2;
-        const yPos = MARGIN;
-        pdf.addImage(imgData, "PNG", xPos, yPos, drawW, drawH);
       }
 
       pdf.save(`${filename}.pdf`);

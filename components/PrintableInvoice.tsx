@@ -304,8 +304,8 @@ export default function PrintableInvoice({
           })}
 
           {/* ── GRAND TOTAL + PAYMENT SUMMARY ── */}
-          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0" })}>
-            <div style={p({ width: "280px", border: `1.5px solid ${INK}`, borderRadius: "4px", overflow: "hidden" })}>
+          <div style={p({ display: "flex", justifyContent: "flex-end", margin: "6px 0 18px 0", minWidth: 0 })}>
+            <div style={p({ width: "280px", maxWidth: "100%", minWidth: 0, border: `1.5px solid ${INK}`, borderRadius: "4px", overflow: "hidden" })}>
               <div style={p({ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px", padding: "11px 16px", background: IVORY })}>
                 <span style={p({ color: MUTE, fontSize: "11px", fontWeight: 700, letterSpacing: "1.5px", textTransform: "uppercase" })}>Grand Total</span>
                 <span style={p({ color: INK, fontSize: "16px", fontWeight: 800, whiteSpace: "nowrap" })}>{formatCurrency(grandTotal)}</span>
